@@ -1,0 +1,2163 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>NumPy, Measured</title><style>
+body { font-family: "Charter", "Georgia", serif; font-size: 10.5pt; line-height: 1.5;
+       color: #1a1a1a; max-width: none; margin: 0; }
+h1 { font-size: 20pt; margin: 0 0 .3em; line-height: 1.2; }
+h2 { font-size: 14pt; margin: 1.6em 0 .4em; border-bottom: 1px solid #ddd;
+     padding-bottom: .15em; }
+h3 { font-size: 11.5pt; margin: 1.3em 0 .3em; }
+h4 { font-size: 10.5pt; margin: 1.1em 0 .25em; color: #333; }
+h1, h2, h3, h4 { font-family: "Helvetica Neue", Arial, sans-serif; page-break-after: avoid; }
+p, li { orphans: 2; widows: 2; }
+code, pre { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 8.6pt; }
+code { background: #f4f4f4; padding: .1em .3em; border-radius: 2px; }
+pre { background: #f7f7f7; border: 1px solid #e3e3e3; border-left: 3px solid #999;
+      padding: .6em .8em; overflow-x: auto; white-space: pre-wrap;
+      word-wrap: break-word; page-break-inside: avoid; }
+pre code { background: none; padding: 0; }
+blockquote { margin: 1em 0; padding: .4em 1em; border-left: 3px solid #bbb;
+             background: #fafafa; page-break-inside: avoid; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 9pt;
+        page-break-inside: avoid; }
+th, td { border: 1px solid #ddd; padding: .35em .5em; text-align: left; }
+th { background: #f0f0f0; }
+img { max-width: 100%; page-break-inside: avoid; }
+a { color: #14417a; text-decoration: none; }
+.chapter { page-break-before: always; }
+.toc { page-break-after: always; }
+.toc ul { list-style: none; padding-left: 0; margin: 0; }
+.toc li { margin: .15em 0; padding-right: .2em; }
+.toc li.group { margin-top: .9em; font-family: "Helvetica Neue", Arial, sans-serif;
+                font-size: 10pt; }
+.toc .pg { float: right; color: #666; font-variant-numeric: tabular-nums;
+           font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9pt; }
+.cover { text-align: center; padding-top: 22vh; page-break-after: always; }
+.cover h1 { font-size: 30pt; border: none; }
+.cover .sub { font-size: 12pt; color: #555; margin-top: .8em; }
+.cover .meta { font-size: 9.5pt; color: #777; margin-top: 3em; }
+</style></head><body>
+<div class="cover">
+  <h1>NumPy, Measured</h1>
+  <div class="sub">Arrays, dtypes, views, broadcasting and the mistakes that give no error</div>
+  <div class="meta">8 chapters &middot; 14,227 words<br>
+  Every number is reproduced by code that ships with the book.</div>
+</div>
+<section class="toc"><h1>Contents</h1><ul><li class="group"><strong>Chapters</strong></li><li><span class="pg">3</span><a href="#chapter-1-the-array">Chapter 1 — The array</a></li><li><span class="pg">7</span><a href="#chapter-2-dtypes-and-the-answers-that-change-silently">Chapter 2 — Dtypes, and the answers that change silently</a></li><li><span class="pg">12</span><a href="#chapter-3-views-and-copies">Chapter 3 — Views and copies</a></li><li><span class="pg">18</span><a href="#chapter-4-indexing">Chapter 4 — Indexing</a></li><li><span class="pg">24</span><a href="#chapter-5-broadcasting">Chapter 5 — Broadcasting</a></li><li><span class="pg">32</span><a href="#chapter-6-ufuncs-and-vectorization">Chapter 6 — Ufuncs and vectorization</a></li><li><span class="pg">40</span><a href="#chapter-7-linear-algebra-and-random-numbers">Chapter 7 — Linear algebra and random numbers</a></li><li><span class="pg">46</span><a href="#chapter-8-putting-it-together">Chapter 8 — Putting it together</a></li><li class="group"><strong>Exercises</strong></li><li><span class="pg">52</span><a href="#exercises-chapter-1">Exercises — Chapter 1</a></li><li><span class="pg">53</span><a href="#exercises-chapter-2">Exercises — Chapter 2</a></li><li><span class="pg">54</span><a href="#exercises-chapter-3">Exercises — Chapter 3</a></li><li><span class="pg">55</span><a href="#exercises-chapter-4">Exercises — Chapter 4</a></li><li><span class="pg">56</span><a href="#exercises-chapter-5">Exercises — Chapter 5</a></li><li><span class="pg">57</span><a href="#exercises-chapter-6">Exercises — Chapter 6</a></li><li><span class="pg">58</span><a href="#exercises-chapter-7">Exercises — Chapter 7</a></li><li><span class="pg">59</span><a href="#exercises-chapter-8">Exercises — Chapter 8</a></li><li class="group"><strong>Worked solutions</strong></li><li><span class="pg">60</span><a href="#solutions-chapter-1">Solutions — Chapter 1</a></li><li><span class="pg">62</span><a href="#solutions-chapter-2">Solutions — Chapter 2</a></li><li><span class="pg">64</span><a href="#solutions-chapter-3">Solutions — Chapter 3</a></li><li><span class="pg">66</span><a href="#solutions-chapter-4">Solutions — Chapter 4</a></li><li><span class="pg">68</span><a href="#solutions-chapter-5">Solutions — Chapter 5</a></li><li><span class="pg">70</span><a href="#solutions-chapter-6">Solutions — Chapter 6</a></li><li><span class="pg">72</span><a href="#solutions-chapter-7">Solutions — Chapter 7</a></li><li><span class="pg">74</span><a href="#solutions-chapter-8">Solutions — Chapter 8</a></li></ul></section>
+<section class="chapter" id="chapter-1-the-array"><h1 id="chapter-1-the-array">Chapter 1 — The array</h1>
+<blockquote>
+<p><strong>Build</strong> — a function <code>describe(a)</code> that prints the memory layout of any array, and a measurement of how much faster an array sum is than a list sum.</p>
+<p><strong>Theory kept</strong> — an array is one block of memory plus three numbers per axis: the shape, the dtype and the strides. Nothing else.</p>
+<p><strong>Source</strong> — New. The behavior is from the NumPy documentation for <code>numpy.ndarray</code>. Every number is from this book's code.</p>
+<p><strong>Run this first</strong> — <code>uv run python -m examples.ch01_array</code>, which is <a href="../examples/ch01_array.py"><code>examples/ch01_array.py</code></a>.</p>
+</blockquote>
+<p>A NumPy array is a block of memory and a description of how to read it. The block holds raw values, side by side, with no gaps. The description tells NumPy where one row ends and the next row starts. When you know these two facts, most of NumPy is no surprise.</p>
+<p>This chapter shows the description, measures what it buys, and shows one case where it buys nothing.</p>
+<h2 id="the-description-shape-dtype-strides">The description: shape, dtype, strides</h2>
+<p>An array has three attributes that fix its layout.</p>
+<ul>
+<li><code>shape</code> is a tuple with the length of each axis.</li>
+<li><code>dtype</code> is the type of each value. It fixes the size of one value in bytes, which is <code>itemsize</code>.</li>
+<li><code>strides</code> is a tuple with the number of bytes to jump to move one step along each axis.</li>
+</ul>
+<p>Make a 3-by-4 array of 32-bit integers and print the three attributes.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.arange(12, dtype=np.int32).reshape(3, 4)
+print(a)
+print(&quot;shape   &quot;, a.shape)
+print(&quot;itemsize&quot;, a.itemsize)
+print(&quot;strides &quot;, a.strides)
+print(&quot;nbytes  &quot;, a.nbytes)
+</code></pre>
+<pre><code class="language-text">[[ 0  1  2  3]
+ [ 4  5  6  7]
+ [ 8  9 10 11]]
+shape    (3, 4)
+itemsize 4
+strides  (16, 4)
+nbytes   48
+</code></pre>
+<p>Read the strides as a rule. To move one column to the right, jump 4 bytes, which is one <code>int32</code>. To move one row down, jump 16 bytes, which is 4 values of 4 bytes. The array has 12 values of 4 bytes each, so <code>nbytes</code> is 48.</p>
+<p>The address of the value at row <code>i</code> and column <code>j</code> is therefore the start of the block plus <code>i * 16 + j * 4</code>. There is no other rule. A slice, a transpose and a reshape all work the same way. They change these numbers and do not touch the block.</p>
+<h2 id="a-transpose-copies-nothing">A transpose copies nothing</h2>
+<p>Transpose the array and print its layout again.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.arange(12, dtype=np.int32).reshape(3, 4)
+b = a.T
+print(&quot;a strides&quot;, a.strides, &quot;shape&quot;, a.shape)
+print(&quot;b strides&quot;, b.strides, &quot;shape&quot;, b.shape)
+print(&quot;same memory:&quot;, np.shares_memory(a, b))
+print(&quot;b is C-contiguous:&quot;, b.flags.c_contiguous)
+</code></pre>
+<pre><code class="language-text">a strides (16, 4) shape (3, 4)
+b strides (4, 16) shape (4, 3)
+same memory: True
+b is C-contiguous: False
+</code></pre>
+<p>The shape went from <code>(3, 4)</code> to <code>(4, 3)</code>, and the strides swapped from <code>(16, 4)</code> to <code>(4, 16)</code>. The 48 bytes did not move. <code>np.shares_memory</code> confirms that <code>a</code> and <code>b</code> read the same block.</p>
+<p>The last line shows the price. A C-contiguous array has its last axis in consecutive memory, so a walk along the last axis reads memory in order. The transpose does not have this property. A loop over its last axis jumps 16 bytes at each step. Chapter 3 measures what that costs.</p>
+<h2 id="the-function-you-build">The function you build</h2>
+<p>Put the three attributes and the two flags that matter into one function. You will use it in every later chapter.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def describe(a: np.ndarray) -&gt; str:
+    &quot;&quot;&quot;One line that tells the whole layout of an array.&quot;&quot;&quot;
+    return (f&quot;shape={a.shape} dtype={a.dtype} itemsize={a.itemsize} &quot;
+            f&quot;strides={a.strides} nbytes={a.nbytes} &quot;
+            f&quot;c_contiguous={a.flags.c_contiguous} owns={a.flags.owndata}&quot;)
+
+
+a = np.arange(12, dtype=np.int32).reshape(3, 4)
+print(describe(a))
+print(describe(a.T))
+print(describe(a[:, ::2]))
+</code></pre>
+<pre><code class="language-text">shape=(3, 4) dtype=int32 itemsize=4 strides=(16, 4) nbytes=48 c_contiguous=True owns=False
+shape=(4, 3) dtype=int32 itemsize=4 strides=(4, 16) nbytes=48 c_contiguous=False owns=False
+shape=(3, 2) dtype=int32 itemsize=4 strides=(16, 8) nbytes=24 c_contiguous=False owns=False
+</code></pre>
+<p>The <code>owns</code> field is <code>True</code> when the array owns its block. It is <code>False</code> when the array only looks at the block of another array. The slice <code>a[:, ::2]</code> takes every second column. It has strides <code>(16, 8)</code>, so it reads the same block with a step of 8 bytes.</p>
+<p>The first line is a surprise. The array <code>a</code> itself has <code>owns=False</code>. The call <code>np.arange(12)</code> made the block, and <code>reshape</code> returned a new view of that block. The variable <code>a</code> is a view, and the block belongs to an array that no name points to. Chapter 3 shows why this matters.</p>
+<h2 id="why-a-sum-over-an-array-is-fast">Why a sum over an array is fast</h2>
+<p>A Python list holds pointers. Each pointer leads to a separate integer object somewhere in memory. A sum over the list must follow each pointer, check the type of the object, and add. An array holds the values themselves, so a sum is one tight loop over consecutive bytes.</p>
+<p>Measure both. The code below sums one million integers in each form and keeps the best of five runs.</p>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+n = 1_000_000
+as_list = list(range(n))
+as_array = np.arange(n)
+
+t_list = min(timeit.repeat(lambda: sum(as_list), number=5, repeat=5)) / 5
+t_array = min(timeit.repeat(lambda: as_array.sum(), number=5, repeat=5)) / 5
+ratio = t_list / t_array
+assert sum(as_list) == int(as_array.sum())
+assert ratio &gt; 5, &quot;chapter 1 claims an array sum is at least 5 times faster&quot;
+print(f&quot;list sum   {t_list * 1e3:8.3f} ms&quot;)
+print(f&quot;array sum  {t_array * 1e3:8.3f} ms&quot;)
+print(f&quot;ratio      {ratio:8.1f}x&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+list sum      9.2 ms
+array sum     0.7 ms
+ratio        13x
+</code></pre>
+<p>The numbers above are from one run on the machine that built this book. Yours will differ. The <code>assert</code> is the claim: the array sum is at least 5 times faster. The run on the build machine gave a ratio of about 13. The assert fails if the ratio falls below 5 on yours.</p>
+<p>Memory shows the same effect. The list holds 8-byte pointers and, in addition, one 28-byte object for each integer above 256.</p>
+<pre><code class="language-python">import sys
+
+import numpy as np
+
+n = 1_000_000
+as_list = list(range(n))
+list_bytes = sys.getsizeof(as_list) + sum(sys.getsizeof(x) for x in as_list)
+array_bytes = np.arange(n).nbytes
+print(&quot;list  &quot;, list_bytes, &quot;bytes&quot;)
+print(&quot;array &quot;, array_bytes, &quot;bytes&quot;)
+print(&quot;ratio &quot;, round(list_bytes / array_bytes, 1))
+</code></pre>
+<pre><code class="language-text">list   36000056 bytes
+array  8000000 bytes
+ratio  4.5
+</code></pre>
+<p>The list needs 4.5 times the memory of the array for the same one million integers. The ratio depends on the dtype. An <code>int8</code> array of the same length is 36 times smaller than the list.</p>
+<h2 id="a-case-where-the-array-is-slower">A case where the array is slower</h2>
+<p>The array has a fixed cost for each call. NumPy must check the type, allocate a result and start the loop. For a very small input, this cost is larger than the work.</p>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+small_list = [1, 2, 3]
+small_array = np.array(small_list)
+t_list = min(timeit.repeat(lambda: sum(small_list), number=20000, repeat=5)) / 20000
+t_array = min(timeit.repeat(lambda: small_array.sum(), number=20000, repeat=5)) / 20000
+print(&quot;array is slower for 3 values:&quot;, t_array &gt; t_list)
+assert t_array &gt; t_list
+</code></pre>
+<pre><code class="language-text">array is slower for 3 values: True
+</code></pre>
+<p>The list wins for three values. Use NumPy when you have thousands of values or more, or when the shape of the problem is a table. For a handful of numbers, use a list and do not apologize.</p>
+<h2 id="what-you-have-now">What you have now</h2>
+<p>You can read any array as a block plus <code>(shape, dtype, strides)</code>. You have a <code>describe</code> function that prints this. You measured three results. The array sum is about 13 times faster on one machine. The memory is 4.5 times smaller. Three values are faster in a list.</p>
+<p>Chapter 2 looks at the <code>dtype</code> field, which decides what a value is, and at the ways it silently changes the answer.</p></section><section class="chapter" id="chapter-2-dtypes-and-the-answers-that-change-silently"><h1 id="chapter-2-dtypes-and-the-answers-that-change-silently">Chapter 2 — Dtypes, and the answers that change silently</h1>
+<blockquote>
+<p><strong>Build</strong> — <code>checked_add(a, b)</code>, an integer add that raises an error when a result does not fit the dtype, in place of wrapping around.</p>
+<p><strong>Theory kept</strong> — a dtype fixes how many bits a value has. NumPy does not check that a result fits in those bits. It keeps the bits that fit and drops the rest.</p>
+<p><strong>Source</strong> — New. The promotion rules are NEP 50, which NumPy 2 implements. Every output below is from this book's code.</p>
+<p><strong>Run this first</strong> — <code>uv run python -m examples.ch02_dtypes</code>, which is <a href="../examples/ch02_dtypes.py"><code>examples/ch02_dtypes.py</code></a>.</p>
+</blockquote>
+<p>Chapter 1 gave every array a dtype. This chapter shows what the dtype does to your numbers. Four things go wrong in practice.</p>
+<ul>
+<li>Integers wrap.</li>
+<li>Floats lose small additions.</li>
+<li>A sum uses a different dtype than its input.</li>
+<li>A mixed expression picks a dtype that you did not choose.</li>
+</ul>
+<p>Each one gives a wrong answer and no error.</p>
+<h2 id="what-numpy-picks-when-you-do-not-choose">What NumPy picks when you do not choose</h2>
+<p>A Python integer becomes <code>int64</code> on this machine. A Python float becomes <code>float64</code>. A mix of the two becomes <code>float64</code>.</p>
+<pre><code class="language-python">import numpy as np
+
+print(np.array([1, 2, 3]).dtype)
+print(np.array([1.0, 2]).dtype)
+print(np.array([1, 2.5]).dtype)
+print(np.array([1, 2, 3]).sum().dtype)
+print((np.array([1, 2, 3]) / 2).dtype)
+</code></pre>
+<pre><code class="language-text">int64
+float64
+float64
+int64
+float64
+</code></pre>
+<p>The last line is a common surprise. The division operator <code>/</code> always gives floats, even for integer input. Use <code>//</code> for integer division.</p>
+<h2 id="integers-wrap-around">Integers wrap around</h2>
+<p>An <code>int8</code> holds the values −128 to 127. NumPy does not stop you at the edge. It wraps.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.array([100, 120, 127], dtype=np.int8)
+print(a + 1)
+print((a + 1).dtype)
+
+img = np.array([200, 250, 10], dtype=np.uint8)
+print(img + 100)
+print(np.array([300, -5]).astype(np.uint8))
+</code></pre>
+<pre><code class="language-text">[ 101  121 -128]
+int8
+[ 44  94 110]
+[ 44 251]
+</code></pre>
+<p>The value 127 plus 1 is −128. The pixel 200 plus 100 is 44, not 300 and not 255. The call <code>astype(np.uint8)</code> turned 300 into 44 and −5 into 251. NumPy printed no message for any of these.</p>
+<p>This is the failure that matters most for image data. A brightness boost on a <code>uint8</code> image does not clip at 255. It wraps, and the bright areas turn dark.</p>
+<p>NumPy 2 does raise one error. A Python integer that does not fit the dtype of the array is an <code>OverflowError</code>, as the next block shows.</p>
+<pre><code class="language-python">import numpy as np
+
+img = np.array([200, 250, 10], dtype=np.uint8)
+try:
+    img + 300
+except OverflowError as e:
+    print(type(e).__name__, &quot;-&quot;, e)
+</code></pre>
+<pre><code class="language-text">OverflowError - Python integer 300 out of bounds for uint8
+</code></pre>
+<p>The error is only for a Python integer that is too large for the dtype. It does not apply when both operands are arrays. The first example, <code>img + 100</code>, passed because 100 fits in <code>uint8</code>. The result of the add did not fit, and nobody checked.</p>
+<h2 id="the-function-you-build">The function you build</h2>
+<p>The rule for a safe add is short. Do the add in a wider type. Compare each result with the limits of the narrow type. Raise an error if one result is outside the limits. <code>np.iinfo</code> gives the limits.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def checked_add(a: np.ndarray, b: np.ndarray) -&gt; np.ndarray:
+    &quot;&quot;&quot;Add two integer arrays. Raise OverflowError if a result does not fit the dtype of `a`.&quot;&quot;&quot;
+    if a.dtype.kind not in &quot;iu&quot; or b.dtype.kind not in &quot;iu&quot;:
+        raise TypeError(&quot;checked_add takes integer arrays only&quot;)
+    if a.dtype == np.uint64 or b.dtype == np.uint64:
+        raise TypeError(&quot;uint64 has no wider integer type to check against&quot;)
+    wide = a.astype(np.int64) + b.astype(np.int64)
+    info = np.iinfo(a.dtype)
+    if wide.size and (wide.min() &lt; info.min or wide.max() &gt; info.max):
+        bad = int(np.flatnonzero((wide &lt; info.min) | (wide &gt; info.max))[0])
+        raise OverflowError(f&quot;element {bad}: {int(wide.flat[bad])} does not fit {a.dtype}&quot;)
+    return wide.astype(a.dtype)
+
+
+pixels = np.array([200, 250, 10], dtype=np.uint8)
+try:
+    checked_add(pixels, np.array([100, 100, 100], dtype=np.uint8))
+except OverflowError as e:
+    print(&quot;refused:&quot;, e)
+print(checked_add(pixels, np.array([10, 5, 100], dtype=np.uint8)))
+</code></pre>
+<pre><code class="language-text">refused: element 0: 300 does not fit uint8
+[210 255 110]
+</code></pre>
+<p>The function has two limits, and the code says both. It cannot check <code>uint64</code>, because no wider integer type exists in NumPy. It takes <code>a.dtype</code> as the output type, so a <code>uint8</code> plus an <code>int16</code> is checked against <code>uint8</code>. For a clip instead of an error, use <code>np.clip(wide, info.min, info.max)</code>.</p>
+<h2 id="a-sum-has-its-own-dtype">A sum has its own dtype</h2>
+<p>A sum over an <code>int8</code> array does not use <code>int8</code>. NumPy sums small integers in the platform integer, which is <code>int64</code> here. You can force the narrow type with <code>dtype=</code>, and the sum wraps.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.array([100, 120, 127], dtype=np.int8)
+print(a.sum(), a.sum().dtype)
+print(a.sum(dtype=np.int8))
+print(a.mean(), a.mean().dtype)
+</code></pre>
+<pre><code class="language-text">347 int64
+91
+115.66666666666667 float64
+</code></pre>
+<p>The true sum is 347. The default sum gives 347. The forced <code>int8</code> sum gives 91, which is 347 minus 256. The mean is a <code>float64</code> and is correct.</p>
+<p>This default is a protection and also a trap. The sum of a <code>uint8</code> image is safe. The sum of a <code>float32</code> array stays <code>float32</code>, and the next section shows that this is not safe.</p>
+<h2 id="floats-lose-small-additions">Floats lose small additions</h2>
+<p>A <code>float32</code> has 24 bits of precision. At 16,777,216, which is 2 to the power 24, the gap between two neighbor values is 2. The sum with 1 is the same number.</p>
+<pre><code class="language-python">import numpy as np
+
+print(np.float32(16777216) + np.float32(1))
+print(np.float64(16777216) + 1)
+print(&quot;float32 epsilon:&quot;, np.finfo(np.float32).eps)
+print(&quot;float64 epsilon:&quot;, np.finfo(np.float64).eps)
+</code></pre>
+<pre><code class="language-text">1.6777216e+07
+16777217.0
+float32 epsilon: 1.1920929e-07
+float64 epsilon: 2.220446049250313e-16
+</code></pre>
+<p>The <code>eps</code> value is the gap between 1.0 and the next float. For <code>float32</code> it is about 1.2e-7, so you get about 7 correct decimal digits. For <code>float64</code> you get about 15 or 16.</p>
+<p>Now the practical case. Add ten million copies of 0.1 in <code>float32</code>. The exact answer is 1,000,000.015, because <code>float32(0.1)</code> is a little more than 0.1. Compare three ways to add.</p>
+<pre><code class="language-python">import numpy as np
+
+x = np.full(10_000_000, 0.1, dtype=np.float32)
+exact = float(np.float32(0.1)) * x.size
+
+pairwise = float(x.sum())
+running = float(np.cumsum(x)[-1])
+wide = float(x.sum(dtype=np.float64))
+for name, value in [(&quot;x.sum()&quot;, pairwise), (&quot;cumsum[-1]&quot;, running), (&quot;sum float64&quot;, wide)]:
+    print(f&quot;{name:12s} {value:14.3f}  relative error {abs(value - exact) / exact:.2e}&quot;)
+</code></pre>
+<pre><code class="language-text">x.sum()         1000000.125  relative error 1.10e-07
+cumsum[-1]      1087937.000  relative error 8.79e-02
+sum float64     1000000.015  relative error 0.00e+00
+</code></pre>
+<p>The three results differ a lot. <code>x.sum()</code> has a relative error of 1e-7, which is the best a <code>float32</code> can give. The cumulative sum from <code>cumsum</code> is wrong by almost 9 percent. The cause is that a cumulative sum adds a small number to a large one. Once the total is large, each 0.1 is below the gap between neighbor values and is partly lost.</p>
+<p><code>x.sum()</code> is accurate because NumPy sums in pairs. It adds neighbors first, then adds the partial sums, so the numbers it adds stay close in size. <code>cumsum</code> cannot do this, because it must produce every cumulative total in order.</p>
+<p>A pure Python loop has the same fault as <code>cumsum</code>. Chapter 6 uses this fact when it builds a moving average.</p>
+<h2 id="mixed-dtypes-which-one-wins">Mixed dtypes: which one wins</h2>
+<p>When two dtypes meet, NumPy picks the smallest dtype that holds both. NumPy 2 added one rule for Python numbers. A Python <code>int</code> or <code>float</code> does not change the dtype of an array. It takes the dtype of the array, if it fits.</p>
+<pre><code class="language-python">import numpy as np
+
+print((np.float32(3) + 3.0).dtype)
+print((np.float32(3) + np.float64(3)).dtype)
+print((np.int8(1) + np.int16(1)).dtype)
+print((np.int64(1) + np.uint64(1)).dtype)
+print((np.array([1, 2], dtype=np.uint8) + 1).dtype)
+</code></pre>
+<pre><code class="language-text">float32
+float64
+int16
+float64
+uint8
+</code></pre>
+<p>Read the lines in order. A <code>float32</code> plus the Python float 3.0 stays <code>float32</code>. A <code>float32</code> plus a <code>float64</code> becomes <code>float64</code>. An <code>int64</code> plus a <code>uint64</code> has no integer type that holds both, so it becomes <code>float64</code>, and large integers lose exactness. The last line is the NumPy 2 rule: a <code>uint8</code> array plus the Python integer 1 stays <code>uint8</code>.</p>
+<p>Older NumPy 1.x chose the dtype from the value of a Python number, so code that you find online can describe different results. Check the version of NumPy before you trust old advice.</p>
+<h2 id="what-you-have-now">What you have now</h2>
+<p>You have <code>checked_add</code>, which turns a silent wrap into an error. You also have four facts that you can check on any machine. A <code>uint8</code> add wraps. A <code>float32</code> cumulative sum can be wrong by 9 percent. The call <code>x.sum()</code> does not have that fault. A mixed expression has a dtype that you can print before you trust it.</p>
+<p>The habit that follows is short. Print <code>.dtype</code> of every array at the edge of your code, where data comes in, and again where a result goes out.</p>
+<p>Chapter 3 moves from what an array holds to who owns it. The next surprise is not a wrong value but a value that changed in a place you did not touch.</p></section><section class="chapter" id="chapter-3-views-and-copies"><h1 id="chapter-3-views-and-copies">Chapter 3 — Views and copies</h1>
+<blockquote>
+<p><strong>Build</strong> — <code>root(a)</code>, a function that finds the array that owns the memory of any view, and a test that shows which operations copy and which do not.</p>
+<p><strong>Theory kept</strong> — a slice is a new description of the same block. An index list or a mask makes a new block. A write through a view changes the original.</p>
+<p><strong>Source</strong> — New. The rules are in the NumPy documentation under "Copies and views". Every output below is from this book's code.</p>
+<p><strong>Run this first</strong> — <code>uv run python -m examples.ch03_views</code>, which is <a href="../examples/ch03_views.py"><code>examples/ch03_views.py</code></a>.</p>
+</blockquote>
+<p>Chapter 1 showed that <code>a.T</code> and <code>a[:, ::2]</code> read the block of <code>a</code> and copy nothing. This is the reason for the speed of NumPy. It is also the reason for one class of bug: a value that changed in a place that you did not touch.</p>
+<p>This chapter gives the rule and builds a function that applies it. It shows two bugs that come from the rule. It also measures a cost that comes from the order of memory.</p>
+<h2 id="the-rule">The rule</h2>
+<p>Basic slicing makes a view. Indexing with a list of integers or with a boolean mask makes a copy.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.arange(12).reshape(3, 4)
+view = a[:, 1:3]       # basic slice
+fancy = a[[0, 2]]      # list of integers
+masked = a[a &gt; 5]      # boolean mask
+
+print(&quot;slice  shares memory:&quot;, np.shares_memory(a, view))
+print(&quot;list   shares memory:&quot;, np.shares_memory(a, fancy))
+print(&quot;mask   shares memory:&quot;, np.shares_memory(a, masked))
+</code></pre>
+<pre><code class="language-text">slice  shares memory: True
+list   shares memory: False
+mask   shares memory: False
+</code></pre>
+<p>The reason is the strides from chapter 1. A slice is always a regular pattern, so one set of strides can describe it. A list of integers or a mask can pick any elements in any order, and no set of strides can describe that. NumPy must make a new block.</p>
+<p>A write through a view changes the original.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.arange(12).reshape(3, 4)
+view = a[:, 1:3]
+view[0, 0] = -1
+print(a[0])
+</code></pre>
+<pre><code class="language-text">[ 0 -1  2  3]
+</code></pre>
+<p>The value at <code>a[0, 1]</code> is now −1, although the code never wrote to <code>a</code>.</p>
+<h2 id="the-function-you-build">The function you build</h2>
+<p>The <code>.base</code> attribute of a view points to the array that it looks at. A view of a view points to the array one step up. Follow the chain until it ends.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def root(a: np.ndarray) -&gt; np.ndarray:
+    &quot;&quot;&quot;Follow .base links to the array that owns the memory of `a`.&quot;&quot;&quot;
+    while isinstance(a.base, np.ndarray):
+        a = a.base
+    return a
+
+
+a = np.arange(12).reshape(3, 4)
+b = a[1:]
+c = b[:, 1:]
+d = c[[0]]
+print(&quot;c is a view of:&quot;, root(c) is root(a))
+print(&quot;d is a view of:&quot;, root(d) is root(a))
+print(&quot;root of d is d:&quot;, root(d) is d)
+</code></pre>
+<pre><code class="language-text">c is a view of: True
+d is a view of: False
+root of d is d: True
+</code></pre>
+<p>The check <code>isinstance(a.base, np.ndarray)</code> is needed. An array can be built on top of bytes, a memory-mapped file, or a buffer from another library. In those cases <code>.base</code> is not an array, and the loop must stop.</p>
+<p>Two arrays share memory when <code>root(x) is root(y)</code>. This is a fast test. It is not exact, because two views of one block can still cover different bytes. For the exact answer, use <code>np.shares_memory</code>, and see the next block.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.arange(10)
+even, odd = a[::2], a[1::2]
+print(&quot;may_share_memory:&quot;, np.may_share_memory(even, odd))
+print(&quot;shares_memory:   &quot;, np.shares_memory(even, odd))
+</code></pre>
+<pre><code class="language-text">may_share_memory: True
+shares_memory:    False
+</code></pre>
+<p>The function <code>np.may_share_memory</code> compares only the first and last byte that each array covers. The two interleaved slices cover the same range, so it says yes. The function <code>np.shares_memory</code> solves the exact problem and says no. The exact function can be slow for complex strides. The quick function never says no when the answer is yes.</p>
+<h2 id="bug-1-a-function-that-changes-its-argument">Bug 1: a function that changes its argument</h2>
+<p>A function that uses <code>-=</code> on its argument writes into the memory of the caller.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def center(x):
+    x -= x.mean()
+    return x
+
+
+data = np.array([[1.0, 10.0], [3.0, 20.0], [5.0, 30.0]])
+col = data[:, 0]
+centered = center(col)
+print(&quot;data after the call:&quot;)
+print(data)
+</code></pre>
+<pre><code class="language-text">data after the call:
+[[-2. 10.]
+ [ 0. 20.]
+ [ 2. 30.]]
+</code></pre>
+<p>The caller passed one column. The column is a view, so the call changed the first column of <code>data</code>. The caller sees a different table, and the function did not return it.</p>
+<p>The fix is one character: <code>x = x - x.mean()</code> makes a new array. The in-place operators <code>+=</code>, <code>-=</code>, <code>*=</code> and <code>/=</code> are faster and use less memory. Use them on arrays that your function made itself. Do not use them on an argument unless the name or the documentation says that the function changes it.</p>
+<h2 id="bug-2-a-small-view-that-keeps-a-large-block-alive">Bug 2: a small view that keeps a large block alive</h2>
+<p>A view keeps its block alive. If you slice 10 rows from a 288 MB array and then delete the large array, the 288 MB stays in memory.</p>
+<pre><code class="language-python">import numpy as np
+
+big = np.zeros((6000, 6000))
+small = big[:10]
+print(&quot;small is&quot;, small.nbytes, &quot;bytes&quot;)
+print(&quot;small keeps&quot;, small.base.nbytes, &quot;bytes alive&quot;)
+
+small = small.copy()
+print(&quot;after copy, base is:&quot;, small.base)
+</code></pre>
+<pre><code class="language-text">small is 480000 bytes
+small keeps 288000000 bytes alive
+after copy, base is: None
+</code></pre>
+<p>Use <code>.copy()</code> when you keep a small piece of a large array. The copy owns 10 rows, and the large array is free to go.</p>
+<h2 id="what-a-copy-costs-and-what-a-bad-walk-costs">What a copy costs, and what a bad walk costs</h2>
+<p>Chapter 1 said that a transpose is not in C order. A C-contiguous array has its last axis in consecutive memory. NumPy reads consecutive memory fast, because one read brings in a line of 64 bytes. Strided reads waste most of the line.</p>
+<p>Measure two cases on a 6000-by-6000 <code>float64</code> array, which is 288 MB. The first is a plain copy against a copy of the transpose. The second is a sum over 600 rows against a sum over 600 columns.</p>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+n = 6000
+big = np.random.default_rng(0).random((n, n))
+
+
+def best(f, repeat=3):
+    return min(timeit.repeat(f, number=1, repeat=repeat))
+
+
+t_copy = best(lambda: big.copy())
+t_tcopy = best(lambda: np.ascontiguousarray(big.T))
+t_row = best(lambda: [big[j, :].sum() for j in range(0, n, 10)])
+t_col = best(lambda: [big[:, j].sum() for j in range(0, n, 10)])
+t_ax0 = best(lambda: big.sum(axis=0))
+t_ax1 = best(lambda: big.sum(axis=1))
+
+assert t_tcopy / t_copy &gt; 1.3
+assert t_col / t_row &gt; 3
+assert 0.33 &lt; t_ax0 / t_ax1 &lt; 3
+print(f&quot;copy of transpose / plain copy   {t_tcopy / t_copy:5.1f}x&quot;)
+print(f&quot;600 column sums / 600 row sums   {t_col / t_row:5.1f}x&quot;)
+print(f&quot;sum(axis=0) / sum(axis=1)        {t_ax0 / t_ax1:5.1f}x&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+copy of transpose / plain copy     2.9x
+600 column sums / 600 row sums    22.3x
+sum(axis=0) / sum(axis=1)          1.3x
+</code></pre>
+<p>The ratios above are from one run on the build machine. The asserts are the claims. The transposed copy is at least 1.3 times slower. The column loop is at least 3 times slower. The two whole-array sums are within a factor of 3 of each other.</p>
+<p>The third line is a result that you can find surprising. The sum along axis 0 walks against the memory order, and it is still not slow. NumPy does not add one column at a time. It adds whole rows into a row of partial sums, which is the order that memory has. The built-in reductions know the layout. Your own Python loop over columns does not.</p>
+<p>The rule that follows has two parts. Use the built-in reduction when one exists. When you must loop in Python, loop over the first axis, so that each step reads one consecutive row.</p>
+<h2 id="which-operations-copy">Which operations copy</h2>
+<p>The code below tests each line of the summary table that follows. It raises an error if one line is wrong.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.arange(12).reshape(3, 4)
+t = a.T
+rows = {
+    &quot;a[1:3]&quot;:            (a[1:3], True),
+    &quot;a[:, ::2]&quot;:         (a[:, ::2], True),
+    &quot;a.T&quot;:               (t, True),
+    &quot;a[[0, 2]]&quot;:         (a[[0, 2]], False),
+    &quot;a[a &gt; 5]&quot;:          (a[a &gt; 5], False),
+    &quot;a.reshape(4, 3)&quot;:   (a.reshape(4, 3), True),
+    &quot;a.T.reshape(12)&quot;:   (t.reshape(12), False),
+    &quot;a.ravel()&quot;:         (a.ravel(), True),
+    &quot;a.T.ravel()&quot;:       (t.ravel(), False),
+    &quot;a.flatten()&quot;:       (a.flatten(), False),
+    &quot;a.copy()&quot;:          (a.copy(), False),
+    &quot;np.array(a)&quot;:       (np.array(a), False),
+}
+for name, (result, expected) in rows.items():
+    shared = np.shares_memory(a, result)
+    assert shared == expected, name
+    print(f&quot;{name:18s} {'view' if shared else 'copy'}&quot;)
+</code></pre>
+<pre><code class="language-text">a[1:3]             view
+a[:, ::2]          view
+a.T                view
+a[[0, 2]]          copy
+a[a &gt; 5]           copy
+a.reshape(4, 3)    view
+a.T.reshape(12)    copy
+a.ravel()          view
+a.T.ravel()        copy
+a.flatten()        copy
+a.copy()           copy
+np.array(a)        copy
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>a[1:3]</code>, <code>a[:, ::2]</code>, <code>a.T</code></td>
+<td>view</td>
+</tr>
+<tr>
+<td><code>a[[0, 2]]</code>, <code>a[a &gt; 5]</code></td>
+<td>copy</td>
+</tr>
+<tr>
+<td><code>a.reshape(...)</code></td>
+<td>view when strides allow, copy otherwise</td>
+</tr>
+<tr>
+<td><code>a.ravel()</code></td>
+<td>view when the array is C-contiguous, copy otherwise</td>
+</tr>
+<tr>
+<td><code>a.flatten()</code>, <code>a.copy()</code>, <code>np.array(a)</code></td>
+<td>always a copy</td>
+</tr>
+</tbody>
+</table>
+<p>The call <code>a.reshape(...)</code> can change from a view to a copy when the array changes layout. Code that depends on the write-through must not rely on <code>reshape</code>. Test with <code>np.shares_memory</code> or use <code>np.may_share_memory</code>, and do not guess.</p>
+<h2 id="what-you-have-now">What you have now</h2>
+<p>You have <code>root(a)</code>, and you can say which of your arrays share memory. You saw two bugs that come from views. A function changed its argument. A small view kept 288 MB alive.</p>
+<p>You also measured the cost of a walk against the memory order. It is 3 times slower for a copy and 22 times slower for a Python loop. The built-in reductions do not have this fault.</p>
+<p>Chapter 4 uses the other half of the rule. Indexing with lists and masks makes copies, and writing through them has its own trap.</p></section><section class="chapter" id="chapter-4-indexing"><h1 id="chapter-4-indexing">Chapter 4 — Indexing</h1>
+<blockquote>
+<p><strong>Build</strong> — <code>group_sum(keys, values, k)</code>, which adds up the values for each key, in three versions that you can time against each other.</p>
+<p><strong>Theory kept</strong> — an index with integers or a mask picks elements and makes a copy. A write with an index list applies to each position once. A condition in <code>np.where</code> is computed on both sides.</p>
+<p><strong>Source</strong> — New. The behavior is from the NumPy documentation on advanced indexing. Every output below is from this book's code.</p>
+<p><strong>Run this first</strong> — <code>uv run python -m examples.ch04_indexing</code>, which is <a href="../examples/ch04_indexing.py"><code>examples/ch04_indexing.py</code></a>.</p>
+</blockquote>
+<p>Chapter 3 said that a list of integers or a mask makes a copy. This chapter shows the four traps that follow from that rule. Each trap produces a wrong result with no error. The chapter then builds a function that counts by key, which is the most common reason for an index with repeated values.</p>
+<h2 id="reading-with-a-mask">Reading with a mask</h2>
+<p>A mask is a boolean array of the same shape as the data. A comparison makes one. The mask can count, select and replace.</p>
+<pre><code class="language-python">import numpy as np
+
+x = np.array([3, -1, 4, -1, 5, -9, 2, 6])
+mask = x &lt; 0
+print(&quot;mask:    &quot;, mask)
+print(&quot;count:   &quot;, mask.sum())
+print(&quot;selected:&quot;, x[mask])
+print(&quot;fraction:&quot;, mask.mean())
+</code></pre>
+<pre><code class="language-text">mask:     [False  True False  True False  True False False]
+count:    3
+selected: [-1 -1 -9]
+fraction: 0.375
+</code></pre>
+<p>The sum of a boolean array counts the <code>True</code> values. The mean gives the fraction. Both use the fact that <code>True</code> is 1.</p>
+<h2 id="trap-1-a-write-to-a-copy-is-lost">Trap 1: a write to a copy is lost</h2>
+<p>A mask on the left of <code>=</code> writes into the array. A mask on the right makes a copy, and a write into the copy is lost.</p>
+<pre><code class="language-python">import numpy as np
+
+m = np.arange(10)
+m[m &gt; 5][0] = 99
+print(&quot;chained write:&quot;, m)
+
+m[m &gt; 5] = 99
+print(&quot;direct write: &quot;, m)
+</code></pre>
+<pre><code class="language-text">chained write: [0 1 2 3 4 5 6 7 8 9]
+direct write:  [ 0  1  2  3  4  5 99 99 99 99]
+</code></pre>
+<p>The first line looks like it sets one element to 99. Python runs two steps: <code>m[m &gt; 5]</code> makes a copy, and <code>[0] = 99</code> writes into that copy. The copy is then deleted. The array <code>m</code> did not change, and NumPy did not say so. The second line is one step, and it works.</p>
+<h2 id="trap-2-a-repeated-index-is-applied-once">Trap 2: a repeated index is applied once</h2>
+<p>Add 1 at each position in an index list. If one position appears three times, you want 3. You get 1.</p>
+<pre><code class="language-python">import numpy as np
+
+idx = np.array([1, 1, 3, 1])
+
+a = np.zeros(5, dtype=int)
+a[idx] += 1
+print(&quot;a[idx] += 1  :&quot;, a)
+
+b = np.zeros(5, dtype=int)
+np.add.at(b, idx, 1)
+print(&quot;np.add.at    :&quot;, b)
+
+print(&quot;np.bincount  :&quot;, np.bincount(idx, minlength=5))
+</code></pre>
+<pre><code class="language-text">a[idx] += 1  : [0 1 0 1 0]
+np.add.at    : [0 3 0 1 0]
+np.bincount  : [0 3 0 1 0]
+</code></pre>
+<p>The statement <code>a[idx] += 1</code> is <code>a[idx] = a[idx] + 1</code>. NumPy reads <code>a[idx]</code> once, adds 1 to each of the four values, and writes four results. Position 1 receives the same result three times. The function <code>np.add.at</code> goes one element at a time, so it is correct. The function <code>np.bincount</code> counts directly.</p>
+<h2 id="trap-3-npwhere-computes-both-sides">Trap 3: <code>np.where</code> computes both sides</h2>
+<p><code>np.where(cond, x, y)</code> picks values from <code>x</code> or from <code>y</code>. Both <code>x</code> and <code>y</code> are computed first. A protection that you put in the condition does not stop a bad value in the branch.</p>
+<pre><code class="language-python">import warnings
+
+import numpy as np
+
+x = np.array([4.0, 0.0, 2.0])
+
+with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter(&quot;always&quot;)
+    r = np.where(x != 0, 1 / x, 0.0)
+print(&quot;result:  &quot;, r)
+print(&quot;warnings:&quot;, [str(w.message) for w in caught])
+
+r2 = np.divide(1, x, out=np.zeros_like(x), where=x != 0)
+print(&quot;with where=:&quot;, r2)
+</code></pre>
+<pre><code class="language-text">result:   [0.25 0.   0.5 ]
+warnings: ['divide by zero encountered in divide']
+with where=: [0.25 0.   0.5 ]
+</code></pre>
+<p>The result is right and the warning shows that the division by zero ran. For division the harm is small, because the bad value is not selected. For <code>np.log</code> of a negative number, the branch that you did not select gives a warning. For an index that is out of range, it raises an error. The <code>where=</code> argument of a ufunc skips the elements where the condition is false. Chapter 6 covers this argument.</p>
+<h2 id="trap-4-the-shape-of-a-mixed-index">Trap 4: the shape of a mixed index</h2>
+<p>When you mix a slice and an index list in one index, NumPy can move the axes of the result.</p>
+<pre><code class="language-python">import numpy as np
+
+A = np.arange(24).reshape(2, 3, 4)
+print(A[0, :, [0, 1]].shape)
+print(A[:, [0, 1], [0, 1]].shape)
+print(A[0][:, [0, 1]].shape)
+</code></pre>
+<pre><code class="language-text">(2, 3)
+(2, 2)
+(3, 2)
+</code></pre>
+<p>Read the first line. The index picks <code>A[0]</code> and then columns 0 and 1, and you can expect the shape <code>(3, 2)</code>. The result is <code>(2, 3)</code>. The rule is that the axes that come from index lists go first when a slice separates two advanced indices. In the first line the scalar <code>0</code> and the list <code>[0, 1]</code> are both advanced indices, and the slice sits between them.</p>
+<p>The third line avoids the problem. It indexes in two steps, and the shape is <code>(3, 2)</code>. When the shape of a mixed index matters, use two steps or print <code>.shape</code> before you rely on it.</p>
+<h2 id="the-function-you-build">The function you build</h2>
+<p>A group-by sum is the most common use of a repeated index. You have one value per row and one key per row, and you want one total per key. Three versions follow. They must give the same answer.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def group_sum_loop(keys, values, k):
+    out = [0.0] * k
+    for key, v in zip(keys.tolist(), values.tolist()):
+        out[key] += v
+    return np.array(out)
+
+
+def group_sum_at(keys, values, k):
+    out = np.zeros(k)
+    np.add.at(out, keys, values)
+    return out
+
+
+def group_sum_bincount(keys, values, k):
+    return np.bincount(keys, weights=values, minlength=k)
+
+
+rng = np.random.default_rng(0)
+n, k = 1_000_000, 100
+keys = rng.integers(0, k, n)
+values = rng.random(n)
+
+ref = group_sum_bincount(keys, values, k)
+print(&quot;loop    matches bincount:&quot;, np.allclose(group_sum_loop(keys, values, k), ref))
+print(&quot;add.at  matches bincount:&quot;, np.allclose(group_sum_at(keys, values, k), ref))
+print(&quot;total of all groups     :&quot;, round(float(ref.sum()), 3), &quot;=&quot;, round(float(values.sum()), 3))
+</code></pre>
+<pre><code class="language-text">loop    matches bincount: True
+add.at  matches bincount: True
+total of all groups     : 500316.548 = 500316.548
+</code></pre>
+<p>The third line is a second check that does not depend on the other functions. The total of the groups must equal the total of all values.</p>
+<p>Now time the three versions.</p>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+rng = np.random.default_rng(0)
+n, k = 1_000_000, 100
+keys = rng.integers(0, k, n)
+values = rng.random(n)
+
+
+def loop():
+    out = [0.0] * k
+    for key, v in zip(keys.tolist(), values.tolist()):
+        out[key] += v
+
+
+def at():
+    out = np.zeros(k)
+    np.add.at(out, keys, values)
+
+
+def bincount():
+    np.bincount(keys, weights=values, minlength=k)
+
+
+t = {f.__name__: min(timeit.repeat(f, number=1, repeat=3)) for f in (loop, at, bincount)}
+assert t[&quot;loop&quot;] / t[&quot;at&quot;] &gt; 5
+assert t[&quot;loop&quot;] / t[&quot;bincount&quot;] &gt; 5
+for name, sec in t.items():
+    print(f&quot;{name:9s} {sec * 1e3:8.2f} ms&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+loop        113.62 ms
+at            2.74 ms
+bincount      2.23 ms
+</code></pre>
+<p>The loop is 40 to 50 times slower than either NumPy version. That is the expected result. The surprise is the second line against the third line.</p>
+<p>Old advice says that <code>np.add.at</code> is very slow and that you must use <code>np.bincount</code>. That advice was true for NumPy 1.x. On NumPy 2.5.4 the two are within 25 percent of each other on this input.</p>
+<p>Check the version of NumPy before you accept advice about speed. The <code>bincount</code> version has one restriction. The keys must be non-negative integers. The function <code>np.add.at</code> accepts any index that is valid for the output array.</p>
+<h2 id="finding-the-largest-values-without-a-sort">Finding the largest values without a sort</h2>
+<p>A full sort puts every value in order. To find the 10 largest of 5 million values, you do not need that. <code>np.partition</code> puts the 10 largest at the end, in any order, and it does less work.</p>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+x = np.random.default_rng(1).random(5_000_000)
+top_sort = np.sort(x)[-10:]
+top_part = np.sort(np.partition(x, -10)[-10:])
+print(&quot;same ten values:&quot;, np.array_equal(top_sort, top_part))
+
+t_sort = min(timeit.repeat(lambda: np.sort(x)[-10:], number=1, repeat=3))
+t_part = min(timeit.repeat(lambda: np.partition(x, -10)[-10:], number=1, repeat=3))
+assert t_sort / t_part &gt; 2
+print(f&quot;sort / partition: {t_sort / t_part:.1f}x&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+same ten values: True
+sort / partition: 4.7x
+</code></pre>
+<p>The partition result is not in order, so the code sorts the 10 values at the end. The saving is a factor of about 5 on the build machine. The assert requires at least 2.</p>
+<h2 id="what-you-have-now">What you have now</h2>
+<p>You have three versions of <code>group_sum</code> that give the same answer, and you know which one to use first: <code>np.bincount</code> when the keys are small non-negative integers, and <code>np.add.at</code> for the other cases. You know four traps by name.</p>
+<ul>
+<li>A chained write is lost.</li>
+<li>A repeated index is applied once.</li>
+<li>The <code>np.where</code> function computes both sides.</li>
+<li>A mixed index moves axes.</li>
+</ul>
+<p>Chapter 5 uses indexing in the other direction. It does not pick elements from an array. It stretches arrays so that they combine without any loop.</p></section><section class="chapter" id="chapter-5-broadcasting"><h1 id="chapter-5-broadcasting">Chapter 5 — Broadcasting</h1>
+<blockquote>
+<p><strong>Build</strong> — three functions that compute all distances between two sets of points, a loop version, a broadcast version and a dot-product version, with a measured memory cost and a measured precision limit for each.</p>
+<p><strong>Theory kept</strong> — two shapes combine when, from the right, each pair of lengths is equal or one of them is 1. A length of 1 is stretched with a stride of 0, so the stretch costs no memory until an operation writes a result.</p>
+<p><strong>Source</strong> — New. The rule is in the NumPy documentation under "Broadcasting". Every output below is from this book's code.</p>
+<p><strong>Run this first</strong> — <code>uv run python -m examples.ch05_broadcasting</code>, which is <a href="../examples/ch05_broadcasting.py"><code>examples/ch05_broadcasting.py</code></a>.</p>
+</blockquote>
+<p>Broadcasting is the rule that lets <code>a - b</code> work when <code>a</code> and <code>b</code> have different shapes. It replaces most of the loops that you write in plain Python. It also makes one new mistake easy: a result that is much larger than you meant.</p>
+<p>This chapter states the rule, shows the stride trick behind it, and uses it to compute all pairwise distances. The distance example is the right size to show the three costs of a vectorized program: time, memory and precision.</p>
+<h2 id="the-rule">The rule</h2>
+<p>Write the two shapes one above the other, aligned on the right. For each column, the two lengths must be equal, or one of them must be 1. A missing length on the left counts as 1. The result has the larger length in each column.</p>
+<pre><code class="language-python">import numpy as np
+
+print(np.broadcast_shapes((3, 1), (1, 4)))
+print(np.broadcast_shapes((8, 1, 6, 1), (7, 1, 5)))
+print(np.broadcast_shapes((5, 3), (3,)))
+
+try:
+    np.ones(3) + np.ones(4)
+except ValueError as e:
+    print(&quot;error:&quot;, e)
+</code></pre>
+<pre><code class="language-text">(3, 4)
+(8, 7, 6, 5)
+(5, 3)
+error: operands could not be broadcast together with shapes (3,) (4,)
+</code></pre>
+<p>Read the second line with the rule. The shapes <code>(8, 1, 6, 1)</code> and <code>(7, 1, 5)</code> align as columns <code>8 1 6 1</code> over <code>_ 7 1 5</code>. The columns pair as 1 with 5, 6 with 1, 1 with 7, and 8 with nothing. The result is <code>(8, 7, 6, 5)</code>. The last line shows what happens when two lengths differ and neither is 1.</p>
+<p>Use <code>None</code> or <code>np.newaxis</code> to add a length of 1 at any position. This is the tool that you use to line up the axes that you want.</p>
+<pre><code class="language-python">import numpy as np
+
+x = np.arange(3)
+print((x[:, None] - x[None, :]))
+print((x[:, None] - x[None, :]).shape)
+</code></pre>
+<pre><code class="language-text">[[ 0 -1 -2]
+ [ 1  0 -1]
+ [ 2  1  0]]
+(3, 3)
+</code></pre>
+<p>The column vector <code>x[:, None]</code> has shape <code>(3, 1)</code>, and the row vector <code>x[None, :]</code> has shape <code>(1, 3)</code>. The result <code>(3, 3)</code> holds every difference <code>x[i] - x[j]</code>.</p>
+<h2 id="a-stretch-costs-no-memory">A stretch costs no memory</h2>
+<p>NumPy does not copy a length-1 axis to make it longer. It sets the stride of that axis to 0, so every step reads the same element. This is the idea from chapter 1, used again.</p>
+<pre><code class="language-python">import numpy as np
+
+row = np.arange(3.0)
+stretched = np.broadcast_to(row, (1000, 3))
+print(&quot;shape  &quot;, stretched.shape)
+print(&quot;strides&quot;, stretched.strides)
+print(&quot;block  &quot;, stretched.base.nbytes, &quot;bytes&quot;)
+print(&quot;result of an add:&quot;, (stretched + 1).nbytes, &quot;bytes&quot;)
+</code></pre>
+<pre><code class="language-text">shape   (1000, 3)
+strides (0, 8)
+block   24 bytes
+result of an add: 24000 bytes
+</code></pre>
+<p>The stretched array looks like 1000 rows. It has a block of 24 bytes and a stride of 0 along the first axis. The cost appears when an operation makes a result, because the result must have all 1000 rows.</p>
+<h2 id="the-trap-a-result-you-did-not-mean">The trap: a result you did not mean</h2>
+<p>A vector of shape <code>(n,)</code> and a column of shape <code>(n, 1)</code> broadcast to <code>(n, n)</code>. NumPy gives no warning, because the rule is satisfied.</p>
+<pre><code class="language-python">import numpy as np
+
+rng = np.random.default_rng(0)
+values = rng.random(1000)
+column = rng.random((1000, 1))
+
+r = values - column
+print(&quot;shape:&quot;, r.shape)
+print(&quot;size: &quot;, r.nbytes / 1e6, &quot;MB&quot;)
+
+X = rng.random((5, 3))
+try:
+    X - X.mean(axis=1)
+except ValueError as e:
+    print(&quot;error:&quot;, e)
+print(&quot;with keepdims:&quot;, (X - X.mean(axis=1, keepdims=True)).shape)
+</code></pre>
+<pre><code class="language-text">shape: (1000, 1000)
+size:  8.0 MB
+error: operands could not be broadcast together with shapes (5,3) (5,) 
+with keepdims: (5, 3)
+</code></pre>
+<p>For <code>n = 1000</code> the mistake costs 8 MB, and nobody notices. For <code>n = 100,000</code> the same mistake needs 80 GB. The usual cause is a function that returned <code>(n, 1)</code> where you expected <code>(n,)</code>. An example is a <code>reshape(-1, 1)</code> that you added for another library.</p>
+<p>The third part of the block is the correct way to subtract a row mean. The call <code>X.mean(axis=1)</code> has shape <code>(5,)</code>, which does not align with <code>(5, 3)</code>. The argument <code>keepdims=True</code> keeps the length-1 axis, so the shape is <code>(5, 1)</code> and the subtraction works.</p>
+<p>The habit that follows: assert the shape of a result at a boundary. A line such as <code>assert r.shape == (n,)</code> is cheap and catches this mistake at once.</p>
+<h2 id="the-function-you-build">The function you build</h2>
+<p>Given <code>A</code> with <code>n</code> points and <code>B</code> with <code>m</code> points, in <code>d</code> dimensions, build the <code>(n, m)</code> matrix of distances. Three versions follow.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def dist_loop(A, B):
+    out = np.empty((len(A), len(B)))
+    for i, a in enumerate(A):
+        for j, b in enumerate(B):
+            out[i, j] = np.sqrt(((a - b) ** 2).sum())
+    return out
+
+
+def dist_broadcast(A, B):
+    &quot;&quot;&quot;Exact. Builds an (n, m, d) temporary array.&quot;&quot;&quot;
+    return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
+
+
+def dist_dot(A, B):
+    &quot;&quot;&quot;Fast and small, but loses precision when points are close together and far from the origin.&quot;&quot;&quot;
+    d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
+    return np.sqrt(np.maximum(d2, 0))
+
+
+rng = np.random.default_rng(0)
+A, B = rng.random((300, 16)), rng.random((400, 16))
+ref = dist_loop(A, B)
+print(&quot;shape:&quot;, ref.shape)
+print(&quot;broadcast max error:&quot;, np.abs(dist_broadcast(A, B) - ref).max())
+print(&quot;dot       max error:&quot;, np.abs(dist_dot(A, B) - ref).max())
+</code></pre>
+<pre><code class="language-text">shape: (300, 400)
+broadcast max error: 0.0
+dot       max error: 2.886579864025407e-15
+</code></pre>
+<p>The broadcast version is the same formula as the loop, with <code>A[:, None, :]</code> of shape <code>(n, 1, d)</code> and <code>B[None, :, :]</code> of shape <code>(1, m, d)</code>. It subtracts to <code>(n, m, d)</code>, squares, and sums over the last axis. The dot version uses the identity that the squared distance is <code>|a|² + |b|² − 2 a·b</code>. The cross term <code>A @ B.T</code> is one matrix product.</p>
+<p>On this well-behaved input, all three agree. The dot version differs from the loop by about 3e-15, which is the rounding of <code>float64</code>.</p>
+<h2 id="cost-1-time">Cost 1: time</h2>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+
+def dist_loop(A, B):
+    out = np.empty((len(A), len(B)))
+    for i, a in enumerate(A):
+        for j, b in enumerate(B):
+            out[i, j] = np.sqrt(((a - b) ** 2).sum())
+    return out
+
+
+def dist_broadcast(A, B):
+    return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
+
+
+def dist_dot(A, B):
+    d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
+    return np.sqrt(np.maximum(d2, 0))
+
+
+rng = np.random.default_rng(0)
+A, B = rng.random((300, 16)), rng.random((400, 16))
+t = {f.__name__: min(timeit.repeat(lambda: f(A, B), number=1, repeat=3))
+     for f in (dist_loop, dist_broadcast, dist_dot)}
+assert t[&quot;dist_loop&quot;] / t[&quot;dist_broadcast&quot;] &gt; 10
+assert t[&quot;dist_broadcast&quot;] / t[&quot;dist_dot&quot;] &gt; 2
+for name, sec in t.items():
+    print(f&quot;{name:15s} {sec * 1e3:9.2f} ms&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+dist_loop         279.18 ms
+dist_broadcast      8.76 ms
+dist_dot            0.75 ms
+</code></pre>
+<p>The broadcast version is about 30 times faster than the loop. The dot version is about 10 times faster again. The asserts require at least 10 and at least 2. The dot version wins because a matrix product uses an optimized library routine and because it does less work: it never forms the <code>(n, m, d)</code> array.</p>
+<h2 id="cost-2-memory">Cost 2: memory</h2>
+<p>The broadcast version builds an array with <code>n * m * d</code> values. For 2000 points in 64 dimensions, that is 256 million values, which is 2 GB.</p>
+<pre><code class="language-python">import tracemalloc
+
+import numpy as np
+
+
+def peak_mb(f, *args):
+    tracemalloc.start()
+    f(*args)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    return peak / 1e6
+
+
+def dist_broadcast(A, B):
+    return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
+
+
+def dist_dot(A, B):
+    d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
+    return np.sqrt(np.maximum(d2, 0))
+
+
+rng = np.random.default_rng(0)
+A, B = rng.random((2000, 64)), rng.random((2000, 64))
+print(&quot;result alone:       &quot;, 2000 * 2000 * 8 / 1e6, &quot;MB&quot;)
+print(&quot;broadcast peak:     &quot;, round(peak_mb(dist_broadcast, A, B)), &quot;MB&quot;)
+print(&quot;dot peak:           &quot;, round(peak_mb(dist_dot, A, B)), &quot;MB&quot;)
+</code></pre>
+<pre><code class="language-text">result alone:        32.0 MB
+broadcast peak:      2080 MB
+dot peak:            96 MB
+</code></pre>
+<p>The result itself is 32 MB. The dot version peaks at 96 MB, which is 3 times the size of the result. The broadcast version peaks at 2080 MB, which is 65 times the size of the result. The temporary array grows with <code>n * m * d</code>. At 3000 points it alone has 3000 × 3000 × 64 × 8 bytes, which is 4.6 GB.</p>
+<p>Two remedies exist for the broadcast version. You can process <code>A</code> in blocks of rows, so that the temporary array has a fixed size. Or you can use the dot version, and read the next section first.</p>
+<h2 id="cost-3-precision">Cost 3: precision</h2>
+<p>The dot version subtracts two large numbers that are almost equal. The squared norms <code>|a|²</code> and <code>|b|²</code> are large when the points are far from the origin. The squared distance is small when the points are close to each other. The difference loses digits.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def dist_loop(A, B):
+    out = np.empty((len(A), len(B)))
+    for i, a in enumerate(A):
+        for j, b in enumerate(B):
+            out[i, j] = np.sqrt(((a - b) ** 2).sum())
+    return out
+
+
+def dist_broadcast(A, B):
+    return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
+
+
+def dist_dot(A, B):
+    d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
+    return np.sqrt(np.maximum(d2, 0))
+
+
+def dist_dot_centered(A, B):
+    c = np.concatenate([A, B]).mean(axis=0)
+    return dist_dot(A - c, B - c)
+
+
+rng = np.random.default_rng(0)
+P = rng.random((60, 3)) * 0.01 + 1e4        # 60 points inside a cube of side 0.01, at 10,000
+ref = dist_loop(P, P)
+print(&quot;mean true distance:      &quot;, round(float(ref.mean()), 4))
+print(&quot;dot            max error:&quot;, f&quot;{np.abs(dist_dot(P, P) - ref).max():.1e}&quot;)
+print(&quot;dot centered   max error:&quot;, f&quot;{np.abs(dist_dot_centered(P, P) - ref).max():.1e}&quot;)
+
+P32 = P.astype(np.float32)
+print(&quot;float32, largest distance, true:    &quot;, round(float(dist_broadcast(P32, P32).max()), 4))
+print(&quot;float32, largest distance, dot:     &quot;, float(dist_dot(P32, P32).max()))
+print(&quot;float32, largest distance, centered:&quot;, round(float(dist_dot_centered(P32, P32).max()), 4))
+</code></pre>
+<pre><code class="language-text">mean true distance:       0.0069
+dot            max error: 3.5e-04
+dot centered   max error: 1.2e-10
+float32, largest distance, true:     0.0144
+float32, largest distance, dot:      8.0
+float32, largest distance, centered: 0.0144
+</code></pre>
+<p>The first three lines are for <code>float64</code>. The error of the plain dot version is 3.5e-4, and the mean true distance is 6.9e-3. The error is 5 percent of the answer. After centering, the error is 1.2e-10.</p>
+<p>The <code>float32</code> lines are worse. The squared norms are about 3e8. At that size the gap between neighbor <code>float32</code> values is 32. The plain dot version reports a largest distance of 8.0. The true value is 0.0144. The answer is wrong by a factor of more than 500.</p>
+<p>The centered version is correct. After the origin moves to the middle of the data, the numbers are small. Then <code>float32</code> has digits to spare.</p>
+<p>Centering is the fix to remember. It costs one mean and two subtractions. It does not help when the points are spread over a large range. In that case the loss is a property of the problem and not of the method.</p>
+<h2 id="which-one-to-use">Which one to use</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Time</th>
+<th>Peak memory</th>
+<th>Precision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dist_loop</code></td>
+<td>slowest by far</td>
+<td>the result</td>
+<td>exact</td>
+</tr>
+<tr>
+<td><code>dist_broadcast</code></td>
+<td>middle</td>
+<td><code>n * m * d</code> values</td>
+<td>exact</td>
+</tr>
+<tr>
+<td><code>dist_dot_centered</code></td>
+<td>fastest</td>
+<td>a few results</td>
+<td>good when centered</td>
+</tr>
+</tbody>
+</table>
+<p>Use the dot version with centering as the default, and test it against the broadcast version on a small sample of your data. Use the broadcast version when you need the exact differences, for example when you also need the direction <code>a - b</code>. Use the loop only to check the others.</p>
+<h2 id="what-you-have-now">What you have now</h2>
+<p>You have the broadcasting rule and <code>np.broadcast_shapes</code> to test it. You know that a stretch is a stride of 0 and costs nothing until a result is made. You have three distance functions, and for each one you have a measured time, a measured peak memory and a measured error.</p>
+<p>The lesson of the chapter is that the fastest version of an array program is also the one that loses the most precision. Measure all three costs before you choose.</p>
+<p>Chapter 6 turns to the other half of a vectorized program: the ufunc, its <code>reduce</code> and <code>accumulate</code> methods, and the cases where no vectorized form exists.</p></section><section class="chapter" id="chapter-6-ufuncs-and-vectorization"><h1 id="chapter-6-ufuncs-and-vectorization">Chapter 6 — Ufuncs and vectorization</h1>
+<blockquote>
+<p><strong>Build</strong> — a moving average in four versions, a loop, a cumulative-sum version, a window version and a convolution, with a measured time and a measured precision for each.</p>
+<p><strong>Theory kept</strong> — a ufunc is a function that runs element by element in compiled code. It has methods (<code>reduce</code>, <code>accumulate</code>, <code>outer</code>) that apply it along an axis. Vectorization is the act of rewriting a loop as calls to ufuncs. It does not exist for every loop.</p>
+<p><strong>Source</strong> — New. The ufunc methods are in the NumPy documentation. Every output below is from this book's code.</p>
+<p><strong>Run this first</strong> — <code>uv run python -m examples.ch06_ufuncs</code>, which is <a href="../examples/ch06_ufuncs.py"><code>examples/ch06_ufuncs.py</code></a>.</p>
+</blockquote>
+<p>A ufunc, short for universal function, is the unit of speed in NumPy. <code>np.add</code>, <code>np.multiply</code>, <code>np.sqrt</code>, <code>np.maximum</code> and about 90 others are ufuncs. The operators <code>+</code> and <code>*</code> call them. A ufunc takes arrays, loops over the elements in compiled code, and returns an array. It does the Python-level work once for the whole array, and not once per element.</p>
+<p>This chapter shows three methods that make a ufunc more than an element-wise function. It shows one wrong way to get the speed. It ends with a moving average that you build four times.</p>
+<h2 id="three-methods-on-every-binary-ufunc">Three methods on every binary ufunc</h2>
+<p>A binary ufunc has a <code>reduce</code> method, an <code>accumulate</code> method and an <code>outer</code> method. Each one applies the ufunc in a different pattern.</p>
+<pre><code class="language-python">import numpy as np
+
+x = np.array([3, 1, 4, 1, 5, 9, 2, 6])
+print(&quot;reduce     :&quot;, np.add.reduce(x))
+print(&quot;accumulate :&quot;, np.add.accumulate(x))
+print(&quot;running max:&quot;, np.maximum.accumulate(x))
+print(&quot;outer      :&quot;)
+print(np.multiply.outer(x[:3], x[:3]))
+</code></pre>
+<pre><code class="language-text">reduce     : 31
+accumulate : [ 3  4  8  9 14 23 25 31]
+running max: [3 3 4 4 5 9 9 9]
+outer      :
+[[ 9  3 12]
+ [ 3  1  4]
+ [12  4 16]]
+</code></pre>
+<p>The call <code>np.add.reduce(x)</code> is <code>x.sum()</code>. It folds the array to one value. The call <code>np.add.accumulate(x)</code> is <code>np.cumsum(x)</code>. It keeps every partial result. The call <code>np.maximum.accumulate(x)</code> gives the running maximum, which has no special name in NumPy. The call <code>np.multiply.outer</code> gives every product of a pair, which is the broadcast of chapter 5 written as a method.</p>
+<p>The methods let you build many functions from the 90 ufuncs. A running minimum, a running product and a running logical <code>or</code> are one call each.</p>
+<h2 id="axis-keepdims-out-and-where">axis, keepdims, out and where</h2>
+<p>Every reduction takes <code>axis</code>, which can be an integer or a tuple. It takes <code>keepdims</code>, which chapter 5 used to keep the reduced axis with length 1. Every ufunc takes <code>out</code>, to write the result into an array that you made, and <code>where</code>, to skip some elements.</p>
+<pre><code class="language-python">import numpy as np
+
+m = np.arange(6).reshape(2, 3)
+print(&quot;axis 0      :&quot;, m.sum(axis=0))
+print(&quot;axis 1      :&quot;, m.sum(axis=1))
+print(&quot;axes (0, 1) :&quot;, m.sum(axis=(0, 1)))
+print(&quot;keepdims    :&quot;, m.sum(axis=1, keepdims=True).shape)
+
+y = np.array([1.0, -1.0, 4.0])
+out = np.full(3, np.nan)
+np.sqrt(y, out=out, where=y &gt;= 0)
+print(&quot;sqrt with where:&quot;, out)
+</code></pre>
+<pre><code class="language-text">axis 0      : [3 5 7]
+axis 1      : [ 3 12]
+axes (0, 1) : 15
+keepdims    : (2, 1)
+sqrt with where: [ 1. nan  2.]
+</code></pre>
+<p>The last line shows the contract of <code>where</code>. The element that the condition skipped keeps its old value in <code>out</code>. If you do not pass <code>out</code>, the values of the skipped elements are undefined, so always pass it.</p>
+<p>One more behavior has a large effect on real data. A <code>nan</code> spreads through a sum.</p>
+<pre><code class="language-python">import numpy as np
+
+x = np.array([1.0, np.nan, 2.0])
+print(&quot;sum   :&quot;, x.sum())
+print(&quot;nansum:&quot;, np.nansum(x))
+print(&quot;mean  :&quot;, x.mean(), &quot;nanmean:&quot;, np.nanmean(x))
+</code></pre>
+<pre><code class="language-text">sum   : nan
+nansum: 3.0
+mean  : nan nanmean: 1.5
+</code></pre>
+<p>The <code>nan</code> functions skip the missing values. Use them with intent. A silent <code>nansum</code> on a column that is mostly <code>nan</code> gives a number, and the number is a sum of very few values.</p>
+<h2 id="temporaries-and-out">Temporaries and <code>out=</code></h2>
+<p>An expression such as <code>a * b + c</code> makes a temporary array for <code>a * b</code>, and then a second array for the sum. For small arrays this does not matter. For large arrays, each temporary is a pass over memory and an allocation. Writing into a result array that you made in advance avoids both.</p>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+rng = np.random.default_rng(1)
+a = rng.random(10_000_000)
+b = rng.random(10_000_000)
+c = rng.random(10_000_000)
+out = np.empty_like(a)
+
+
+def expression():
+    return a * b + c
+
+
+def in_place():
+    np.multiply(a, b, out=out)
+    np.add(out, c, out=out)
+    return out
+
+
+assert np.array_equal(expression(), in_place())
+t_expr = min(timeit.repeat(expression, number=1, repeat=5))
+t_inpl = min(timeit.repeat(in_place, number=1, repeat=5))
+assert t_expr / t_inpl &gt; 1.1
+print(f&quot;expression / in place: {t_expr / t_inpl:.2f}x&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+expression / in place: 1.41x
+</code></pre>
+<p>The gain on the build machine is 1.4 times, and the assert requires 1.1. This is a modest gain, and the code is harder to read. Use <code>out=</code> when the profile shows that this line matters, and not before.</p>
+<h2 id="npvectorize-is-not-vectorization"><code>np.vectorize</code> is not vectorization</h2>
+<p>The name suggests speed. The documentation says otherwise: the function is provided for convenience, and it is a Python loop. Measure it against a plain loop and against the real vectorized form.</p>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+v = np.random.default_rng(0).random(1_000_000)
+
+
+def f(a):
+    return a * a + 1 if a &gt; 0.5 else a
+
+
+vf = np.vectorize(f)
+t_loop = min(timeit.repeat(lambda: [f(a) for a in v.tolist()], number=1, repeat=3))
+t_vec = min(timeit.repeat(lambda: vf(v), number=1, repeat=3))
+t_where = min(timeit.repeat(lambda: np.where(v &gt; 0.5, v * v + 1, v), number=1, repeat=3))
+
+assert t_vec / t_loop &gt; 0.5          # np.vectorize is no faster than the loop
+assert t_loop / t_where &gt; 5          # the real vectorized form is
+print(f&quot;list comprehension {t_loop * 1e3:7.1f} ms&quot;)
+print(f&quot;np.vectorize       {t_vec * 1e3:7.1f} ms&quot;)
+print(f&quot;np.where           {t_where * 1e3:7.1f} ms&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+list comprehension   166.1 ms
+np.vectorize         203.4 ms
+np.where             15.1 ms
+</code></pre>
+<p>The <code>np.vectorize</code> call is slower than the list comprehension that it replaces, on the build machine. The real vectorized form, with <code>np.where</code>, is 11 to 13 times faster than both. Use <code>np.vectorize</code> to make a Python function accept arrays in a place where speed does not matter. Do not use it to go faster.</p>
+<h2 id="the-function-you-build-a-moving-average">The function you build: a moving average</h2>
+<p>A moving average of window <code>w</code> replaces each value with the mean of the <code>w</code> values that end there. The loop version is the definition. Three others follow.</p>
+<pre><code class="language-python">import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
+
+
+def ma_loop(x, w):
+    out = np.empty(len(x) - w + 1)
+    for i in range(len(out)):
+        out[i] = x[i:i + w].mean()
+    return out
+
+
+def ma_cumsum(x, w):
+    c = np.concatenate([[0.0], np.cumsum(x)])
+    return (c[w:] - c[:-w]) / w
+
+
+def ma_window(x, w):
+    return sliding_window_view(x, w).mean(axis=-1)
+
+
+def ma_convolve(x, w):
+    return np.convolve(x, np.ones(w) / w, mode=&quot;valid&quot;)
+
+
+x = np.random.default_rng(2).random(20_000)
+ref = ma_loop(x, 50)
+for f in (ma_cumsum, ma_window, ma_convolve):
+    print(f&quot;{f.__name__:11s} max difference from the loop: {np.abs(f(x, 50) - ref).max():.1e}&quot;)
+</code></pre>
+<pre><code class="language-text">ma_cumsum   max difference from the loop: 2.4e-13
+ma_window   max difference from the loop: 0.0e+00
+ma_convolve max difference from the loop: 3.3e-16
+</code></pre>
+<p>All three agree with the loop to within rounding. The version <code>ma_cumsum</code> is based on one fact: the sum of the window that ends at <code>i</code> is the cumulative sum at <code>i</code> minus the cumulative sum <code>w</code> steps earlier. This is two passes over the data, whatever the size of <code>w</code>. The version <code>ma_window</code> uses <code>sliding_window_view</code>, which makes an <code>(n - w + 1, w)</code> view without copying, as chapter 3 explained, and then takes the mean of each row. The version <code>ma_convolve</code> treats the average as a convolution with a flat kernel.</p>
+<p>Time them on one million values with <code>w = 50</code>.</p>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
+
+
+def ma_loop(x, w):
+    out = np.empty(len(x) - w + 1)
+    for i in range(len(out)):
+        out[i] = x[i:i + w].mean()
+    return out
+
+
+def ma_cumsum(x, w):
+    c = np.concatenate([[0.0], np.cumsum(x)])
+    return (c[w:] - c[:-w]) / w
+
+
+def ma_window(x, w):
+    return sliding_window_view(x, w).mean(axis=-1)
+
+
+def ma_convolve(x, w):
+    return np.convolve(x, np.ones(w) / w, mode=&quot;valid&quot;)
+
+
+x = np.random.default_rng(2).random(1_000_000)
+t_loop = min(timeit.repeat(lambda: ma_loop(x[:20_000], 50), number=1, repeat=3)) * 50   # scaled to 1,000,000
+t = {f.__name__: min(timeit.repeat(lambda: f(x, 50), number=1, repeat=3))
+     for f in (ma_cumsum, ma_window, ma_convolve)}
+assert t_loop / t[&quot;ma_cumsum&quot;] &gt; 20
+print(f&quot;ma_loop (scaled from 20,000 values) {t_loop * 1e3:8.0f} ms&quot;)
+for name, sec in t.items():
+    print(f&quot;{name:35s} {sec * 1e3:8.0f} ms&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+ma_loop (scaled from 20,000 values)     2747 ms
+ma_cumsum                                 16 ms
+ma_window                                 44 ms
+ma_convolve                               17 ms
+</code></pre>
+<p>The loop is measured on 20,000 values and multiplied by 50, so that the run is short. The vectorized versions are 60 to 170 times faster. The window version is the slowest of the three because it computes a real mean over a <code>w</code>-wide row for every output. The cumulative-sum version and the convolution are about the same speed.</p>
+<h2 id="the-precision-trap-in-the-fast-version">The precision trap in the fast version</h2>
+<p>The cumulative-sum version is the fastest and the shortest. It is also the one that chapter 2 warned about. Its cumulative sum grows large, and every window sum is the difference of two large numbers.</p>
+<pre><code class="language-python">import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
+
+
+def ma_cumsum(x, w):
+    c = np.concatenate([[0.0], np.cumsum(x)])
+    return (c[w:] - c[:-w]) / w
+
+
+def ma_cumsum_centered(x, w):
+    m = x.mean()
+    return ma_cumsum(x - m, w) + m
+
+
+def ma_window(x, w):
+    return sliding_window_view(x, w).mean(axis=-1)
+
+
+print(&quot;float32 data, values from 10000 to 10100, one million values&quot;)
+for seed in (2, 3):
+    s = np.random.default_rng(seed).random(1_000_000)
+    x32 = (s * 100 + 1e4).astype(np.float32)
+    truth = ma_window(x32.astype(np.float64), 50)
+    for f in (ma_cumsum, ma_cumsum_centered, ma_window):
+        print(f&quot;seed {seed} {f.__name__:20s} max error {np.abs(f(x32, 50) - truth).max():.3g}&quot;)
+    x64 = x32.astype(np.float64)
+    print(f&quot;seed {seed} {'ma_cumsum in float64':20s} max error {np.abs(ma_cumsum(x64, 50) - truth).max():.3g}&quot;)
+</code></pre>
+<pre><code class="language-text">float32 data, values from 10000 to 10100, one million values
+seed 2 ma_cumsum            max error 207
+seed 2 ma_cumsum_centered   max error 0
+seed 2 ma_window            max error 0.00197
+seed 2 ma_cumsum in float64 max error 0
+seed 3 ma_cumsum            max error 209
+seed 3 ma_cumsum_centered   max error 0.000469
+seed 3 ma_window            max error 0.00186
+seed 3 ma_cumsum in float64 max error 0
+</code></pre>
+<p>The plain cumulative-sum version has an error of about 200 on values near 10,000. That is 2 percent of the values. The window version has an error of 0.002, which is about twice the spacing of <code>float32</code> at that size.</p>
+<p>The centered version subtracts the mean first, so the cumulative sum stays small. On seed 2 its error is exactly 0. This is a property of that data and not of the method. The centered total never leaves the range where <code>float32</code> can hold it exactly, because every value is a multiple of 2⁻¹⁰.</p>
+<p>On seed 3 the error is 4.7e-4, which is smaller than the window version.</p>
+<p>Read the two seeds together. Centering gives a good answer in both cases, and the exact zero on one seed is luck.</p>
+<p>If you do not know the range of your data, use the window version or use <code>float64</code> for the cumulative sum. The last line of each seed shows the <code>float64</code> result. Its error is 0 on both seeds, for the same reason as the exact zero above. The values sit on a grid of 2⁻¹⁰, and <code>float64</code> holds their sums exactly.</p>
+<h2 id="when-no-vectorized-form-exists">When no vectorized form exists</h2>
+<p>Some loops cannot be written with ufuncs. The usual cause is a dependency: each value needs the result for the previous value. An exponential moving average is the standard case.</p>
+<pre><code class="language-python">import time
+
+import numpy as np
+
+
+def ema_loop(x, alpha):
+    out = np.empty_like(x)
+    acc = x[0]
+    for i, v in enumerate(x.tolist()):
+        acc = alpha * v + (1 - alpha) * acc
+        out[i] = acc
+    return out
+
+
+x = np.random.default_rng(2).random(1_000_000)
+start = time.perf_counter()
+y = ema_loop(x, 0.1)
+elapsed = time.perf_counter() - start
+assert np.isfinite(y[-1]) and elapsed &lt; 10
+print(f&quot;{len(x) / elapsed / 1e6:.1f} million steps a second&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+3.6 million steps a second
+</code></pre>
+<p>The loop runs at 3.6 million steps a second on the build machine. There is no <code>np.add.accumulate</code> form of this, because the weight of each step depends on the running value. Two honest options exist outside this book. A filter routine from a signal library applies this recurrence in compiled code. A compiler such as Numba turns the loop into machine code. This book did not measure either, so it makes no claim about their speed.</p>
+<h2 id="what-you-have-now">What you have now</h2>
+<p>You have the three ufunc methods and four arguments: <code>axis</code>, <code>keepdims</code>, <code>out</code> and <code>where</code>. You have a moving average in four versions, with a time and an error for each. You know that <code>np.vectorize</code> is a loop. You know that <code>out=</code> saves a factor of 1.4 on large arrays. You know that the cumulative-sum trick needs centered data in <code>float32</code>.</p>
+<p>The test that you can apply to any loop is short. If each iteration needs only its own element and its neighbors at fixed offsets, a vectorized form exists. If an iteration needs the result of the previous one, it probably does not.</p>
+<p>Chapter 7 uses NumPy for the two jobs that most users meet next: solving linear systems and drawing random numbers that you can reproduce.</p></section><section class="chapter" id="chapter-7-linear-algebra-and-random-numbers"><h1 id="chapter-7-linear-algebra-and-random-numbers">Chapter 7 — Linear algebra and random numbers</h1>
+<blockquote>
+<p><strong>Build</strong> — <code>fit_line(x, y)</code>, a least-squares line with a bootstrap interval for the slope, which gives the same answer every time that you give it the same seed.</p>
+<p><strong>Theory kept</strong> — solve a system with <code>solve</code> and not with the inverse. Fit with <code>lstsq</code> and not with the normal equations. Make random numbers from a <code>Generator</code> that you create and pass, and not from a global state.</p>
+<p><strong>Source</strong> — New. The conditioning rule is standard numerical linear algebra. The random-number policy is from the NumPy documentation. Every output below is from this book's code.</p>
+<p><strong>Run this first</strong> — <code>uv run python -m examples.ch07_linalg_random</code>, which is <a href="../examples/ch07_linalg_random.py"><code>examples/ch07_linalg_random.py</code></a>.</p>
+</blockquote>
+<p>Two jobs account for most of the NumPy code outside data cleaning. One is to solve for unknown numbers, such as the coefficients of a fit. The other is to draw random numbers, for a simulation, a split or a resample. Both have a textbook form that works on small examples and fails on real ones. This chapter measures how each one fails.</p>
+<h2 id="the-matrix-product">The matrix product</h2>
+<p>The operator <code>@</code> is the matrix product. It works on vectors, matrices and stacks of matrices.</p>
+<pre><code class="language-python">import numpy as np
+
+A = np.arange(6.0).reshape(2, 3)
+v = np.array([1.0, 0.0, -1.0])
+stack = np.arange(24.0).reshape(4, 2, 3)
+
+print(&quot;matrix @ vector      :&quot;, (A @ v).shape)
+print(&quot;stack of 4 @ vector  :&quot;, (stack @ v).shape)
+print(&quot;stack of 4 @ A.T     :&quot;, (stack @ A.T).shape)
+</code></pre>
+<pre><code class="language-text">matrix @ vector      : (2,)
+stack of 4 @ vector  : (4, 2)
+stack of 4 @ A.T     : (4, 2, 2)
+</code></pre>
+<p>The last two lines show the rule. Leading axes act as a stack, and <code>@</code> multiplies the last two axes of each matrix. The leading axes broadcast, as in chapter 5. One call does four matrix products.</p>
+<p>Use <code>@</code> and <code>np.dot</code> only on arrays. Do not use the <code>*</code> operator for a matrix product. It multiplies element by element, and for two square matrices it gives a result with the right shape and the wrong values.</p>
+<h2 id="solve-do-not-invert">Solve, do not invert</h2>
+<p>To solve <code>A x = b</code> you can compute <code>inv(A) @ b</code> or call <code>solve(A, b)</code>. Both give the same answer in a textbook. Test them on a Hilbert matrix, which is a standard badly conditioned matrix. The right answer is a vector of ones, because the code builds <code>b</code> from it.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def hilbert(n):
+    i = np.arange(n)
+    return 1.0 / (i[:, None] + i[None, :] + 1)
+
+
+print(f&quot;{'n':&gt;3} {'cond(A)':&gt;9} {'solve error':&gt;12} {'inv error':&gt;10} {'solve resid':&gt;12} {'inv resid':&gt;10}&quot;)
+for n in (4, 8, 12):
+    H = hilbert(n)
+    true = np.ones(n)
+    b = H @ true
+    x_solve = np.linalg.solve(H, b)
+    x_inv = np.linalg.inv(H) @ b
+    print(f&quot;{n:&gt;3} {np.linalg.cond(H):9.1e} {np.abs(x_solve - true).max():12.1e} &quot;
+          f&quot;{np.abs(x_inv - true).max():10.1e} {np.abs(H @ x_solve - b).max():12.1e} &quot;
+          f&quot;{np.abs(H @ x_inv - b).max():10.1e}&quot;)
+</code></pre>
+<pre><code class="language-text">  n   cond(A)  solve error  inv error  solve resid  inv resid
+  4   1.6e+04      6.6e-14    9.1e-13      0.0e+00    9.5e-14
+  8   1.5e+10      1.2e-07    1.9e-06      2.2e-16    1.4e-08
+ 12   1.8e+16      7.0e-01    2.1e+01      4.4e-16    5.4e-02
+</code></pre>
+<p>Read the table in three parts.</p>
+<p>The condition number <code>cond(A)</code> measures how much the answer can change when the input changes a little. A rule of thumb is that the error of the answer is about <code>cond(A)</code> times the rounding unit of <code>float64</code>, which is 1.1e-16. For <code>n = 8</code>, that is 1.5e10 times 1.1e-16, or about 2e-6. The table shows 1.2e-7 for <code>solve</code>, and 1.9e-6 for <code>inv</code>. The rule gives the order of magnitude.</p>
+<p>For <code>n = 12</code> the condition number is 1.8e16, which is more than the number of digits that <code>float64</code> has. No method can give a good answer. Both are wrong, and the errors are 0.7 and 21.</p>
+<p>The last two columns show the real difference. The residual <code>H @ x - b</code> of <code>solve</code> is at the rounding level for every <code>n</code>, even when <code>x</code> is wrong. The residual of <code>inv</code> is 6e7 times larger at <code>n = 8</code> and 1e14 times larger at <code>n = 12</code>. The inverse method gives an answer that does not even satisfy the equation. Use the residual as a check: it tells you if the method did its job, where the error tells you only that the problem was hard.</p>
+<p>Speed points the same way. For a 2000-by-2000 system, <code>solve</code> took 0.18 s and <code>inv(A) @ b</code> took 0.48 s on the build machine. The inverse does more work for a worse answer.</p>
+<h2 id="fit-with-lstsq-not-with-the-normal-equations">Fit with <code>lstsq</code>, not with the normal equations</h2>
+<p>A least-squares fit minimizes <code>|X β − y|²</code>. The textbook solution is the normal equations, <code>(XᵀX) β = Xᵀy</code>. The problem is that <code>XᵀX</code> has the square of the condition number of <code>X</code>. Compare the two on polynomial fits, where <code>y</code> is built from known coefficients of 1.</p>
+<pre><code class="language-python">import numpy as np
+
+x = np.linspace(0, 1, 50)
+print(f&quot;{'degree':&gt;6} {'cond(X)':&gt;9} {'lstsq error':&gt;12} {'normal-eq error':&gt;16}&quot;)
+for degree in (3, 6, 9, 12):
+    X = np.vander(x, degree + 1)
+    y = X @ np.ones(degree + 1)
+    via_lstsq = np.linalg.lstsq(X, y, rcond=None)[0]
+    via_normal = np.linalg.solve(X.T @ X, X.T @ y)
+    print(f&quot;{degree:&gt;6} {np.linalg.cond(X):9.1e} {np.abs(via_lstsq - 1).max():12.1e} &quot;
+          f&quot;{np.abs(via_normal - 1).max():16.1e}&quot;)
+</code></pre>
+<pre><code class="language-text">degree   cond(X)  lstsq error  normal-eq error
+     3   1.2e+02      7.1e-15          1.4e-12
+     6   2.0e+04      8.1e-13          4.1e-08
+     9   3.6e+06      5.4e-11          1.3e-03
+    12   6.8e+08      9.7e-09          3.9e-01
+</code></pre>
+<p>At degree 9 the error of the normal equations is 1.3e-3 and the error of <code>lstsq</code> is 5.4e-11. The normal equations lose 7 digits more. At degree 12 the error is 0.39 where <code>lstsq</code> has 1e-8. The cause is the squared condition number: <code>cond(X)</code> of 6.8e8 at degree 12 becomes 4.6e17 for <code>XᵀX</code>, which is past the limit of <code>float64</code>. The function <code>lstsq</code> uses a factorization of <code>X</code> that does not form <code>XᵀX</code>.</p>
+<p>The function also returns the rank and the singular values, and that is its second use. If the rank is less than the number of columns, two of your columns carry the same information, and the coefficients are not unique. Check the rank of any design matrix that you did not build yourself.</p>
+<h2 id="random-numbers-create-a-generator-and-pass-it">Random numbers: create a generator and pass it</h2>
+<p>NumPy has two random-number interfaces. The old one is the global <code>np.random.seed</code> and <code>np.random.rand</code>. The current one is <code>np.random.default_rng</code>, which returns a <code>Generator</code> object. Use the current one.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.random.default_rng(42).random(3)
+b = np.random.default_rng(42).random(3)
+c = np.random.default_rng(43).random(3)
+print(&quot;seed 42:&quot;, a)
+print(&quot;seed 42:&quot;, b)
+print(&quot;seed 43:&quot;, c)
+print(&quot;same seed, same numbers:&quot;, np.array_equal(a, b))
+</code></pre>
+<pre><code class="language-text">seed 42: [0.77395605 0.43887844 0.85859792]
+seed 42: [0.77395605 0.43887844 0.85859792]
+seed 43: [0.65229926 0.04377532 0.02002959]
+same seed, same numbers: True
+</code></pre>
+<p>The reason to avoid the global state is not style. Every function in the process uses the same global state. If one library function draws a number between your two draws, your sequence changes, and the cause is far from the symptom. A <code>Generator</code> that you create and pass to the functions that need it has no such coupling. The function signature shows that the function is random, and the caller controls the seed.</p>
+<h2 id="parallel-streams-spawn-not-seed-i">Parallel streams: <code>spawn</code>, not <code>seed + i</code></h2>
+<p>A job with several workers needs one stream per worker, and the streams must not overlap or repeat. The tool is <code>SeedSequence.spawn</code>.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def work(seed_seq):
+    return np.random.default_rng(seed_seq).normal(size=1000).mean()
+
+
+children = np.random.SeedSequence(7).spawn(4)
+forward = [work(s) for s in children]
+backward = [work(s) for s in reversed(np.random.SeedSequence(7).spawn(4))][::-1]
+
+print(&quot;four worker means:&quot;, [round(float(m), 4) for m in forward])
+print(&quot;same in any order:&quot;, forward == backward)
+print(&quot;different streams:&quot;, len(set(forward)) == 4)
+</code></pre>
+<pre><code class="language-text">four worker means: [-0.0682, 0.0625, 0.0279, -0.0366]
+same in any order: True
+different streams: True
+</code></pre>
+<p>Each child sequence is derived from the parent in a way that is designed to give independent streams. The result of worker 2 does not depend on whether worker 1 ran first. This is the property that lets you move from a loop to a pool of processes and keep the numbers.</p>
+<h2 id="what-the-documentation-promises-and-what-it-does-not">What the documentation promises, and what it does not</h2>
+<p>The numbers above are stable on one version of NumPy. The NumPy policy is that the streams of <code>Generator</code> methods are not guaranteed to be the same between versions. A seed makes a run reproducible on one installation. It does not make it reproducible for ever.</p>
+<p>If a published number depends on a stream, write the NumPy version next to the seed. This book does so. NumPy 2.5.4 produced every output.</p>
+<h2 id="the-function-you-build">The function you build</h2>
+<p>A line fit gives one slope. To say how well the data fix the slope, resample the rows with replacement, fit again, and look at the spread of the slopes. This is the bootstrap. Doing 1000 fits is a loop in Python, and a few lines of broadcasting here.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def bootstrap_slopes(x, y, n_boot, seed):
+    &quot;&quot;&quot;Slope of the least-squares line for `n_boot` resamples of the rows, all at once.&quot;&quot;&quot;
+    g = np.random.default_rng(seed)
+    idx = g.integers(0, len(x), (n_boot, len(x)))
+    xs, ys = x[idx], y[idx]
+    xc = xs - xs.mean(axis=1, keepdims=True)
+    yc = ys - ys.mean(axis=1, keepdims=True)
+    return (xc * yc).sum(axis=1) / (xc * xc).sum(axis=1)
+
+
+def fit_line(x, y, n_boot=1000, seed=0):
+    &quot;&quot;&quot;Return (intercept, slope, (low, high)) with a 95% bootstrap interval for the slope.&quot;&quot;&quot;
+    X = np.column_stack([np.ones_like(x), x])
+    (b0, b1), *_ = np.linalg.lstsq(X, y, rcond=None)
+    low, high = np.percentile(bootstrap_slopes(x, y, n_boot, seed), [2.5, 97.5])
+    return float(b0), float(b1), (float(low), float(high))
+
+
+x = np.linspace(0, 1, 40)
+y = 1 + 2 * x + np.random.default_rng(5).normal(0, 0.1, 40)
+
+b0, b1, (lo, hi) = fit_line(x, y, seed=3)
+print(f&quot;intercept {b0:.3f}, slope {b1:.3f}, 95% interval for slope ({lo:.3f}, {hi:.3f})&quot;)
+print(&quot;same seed, same interval:     &quot;, fit_line(x, y, seed=3) == fit_line(x, y, seed=3))
+print(&quot;different seed, same interval:&quot;, fit_line(x, y, seed=4)[2] == fit_line(x, y, seed=3)[2])
+print(&quot;true slope inside interval:   &quot;, lo &lt;= 2.0 &lt;= hi)
+</code></pre>
+<pre><code class="language-text">intercept 1.001, slope 1.934, 95% interval for slope (1.850, 2.014)
+same seed, same interval:      True
+different seed, same interval: False
+true slope inside interval:    True
+</code></pre>
+<p>The bootstrap function does three steps from earlier chapters. It draws a <code>(1000, 40)</code> array of row numbers. It uses an integer index list, from chapter 4, to build <code>x[idx]</code> of shape <code>(1000, 40)</code>. It uses <code>keepdims=True</code>, from chapter 5, to center each row. No loop appears.</p>
+<p>Two checks that the module runs are worth stating. First, each bootstrap slope equals the slope that <code>lstsq</code> gives for the same resample, so the closed-form shortcut is right. Second, a bootstrap interval is a claim about coverage, and you can measure the claim. Fit 300 data sets that have a true slope of 2, build the interval for each, and count how often the interval holds 2.</p>
+<p>Run this block from the root of the book, so that the import finds the module.</p>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch07_linalg_random import fit_line
+
+x = np.linspace(0, 1, 40)
+trials, covered = 300, 0
+for t in range(trials):
+    y = 1 + 2 * x + np.random.default_rng(1000 + t).normal(0, 0.1, 40)
+    _, _, (lo, hi) = fit_line(x, y, n_boot=500, seed=t)
+    covered += lo &lt;= 2.0 &lt;= hi
+print(f&quot;covered {covered} of {trials}: {covered / trials:.3f}&quot;)
+</code></pre>
+<pre><code class="language-text">covered 289 of 300: 0.963
+</code></pre>
+<p>The interval is nominally 95 percent. For 300 trials, the standard error of a proportion near 0.95 is 0.013. A result between 0.92 and 0.98 agrees with the claim. The measured coverage is in that range.</p>
+<h2 id="what-you-have-now">What you have now</h2>
+<p>You have <code>fit_line</code>, which fits a line and reports an interval, and which gives the same numbers for the same seed. You have three rules, each with a measurement behind it. <code>solve</code> has a residual at the rounding level when <code>inv</code> does not. <code>lstsq</code> keeps 7 digits that the normal equations lose at degree 9. A spawned seed sequence gives results that do not depend on the order of the workers.</p>
+<p>Chapter 8 puts the whole book to work on one program. It ends with a list of the traps in the order that you meet them.</p></section><section class="chapter" id="chapter-8-putting-it-together"><h1 id="chapter-8-putting-it-together">Chapter 8 — Putting it together</h1>
+<blockquote>
+<p><strong>Build</strong> — <code>kmeans</code>, a clustering routine of 20 lines with no Python loop over points, a loop version to check it, and a best-of-10 wrapper that fixes the one failure that the check finds.</p>
+<p><strong>Theory kept</strong> — a vectorized program is a chain of the parts from earlier chapters, and each part has a cost in time, memory or precision. You test the chain against a slow, plain version of the same program.</p>
+<p><strong>Source</strong> — New. The algorithm is Lloyd's k-means, which is standard. Every output below is from this book's code.</p>
+<p><strong>Run this first</strong> — <code>uv run python -m examples.ch08_kmeans</code>, which is <a href="../examples/ch08_kmeans.py"><code>examples/ch08_kmeans.py</code></a>.</p>
+</blockquote>
+<p>The earlier chapters each gave one tool. This chapter uses four of them in one program and checks the result. The program is k-means clustering. It is small enough to read on one page. It needs a distance matrix (chapter 5), a group-by sum (chapter 4), a random generator that you pass (chapter 7) and the checks from chapters 2 and 3.</p>
+<h2 id="the-algorithm-in-two-lines">The algorithm in two lines</h2>
+<p>Start with <code>k</code> centroids. Repeat two steps until the labels stop changing. First, give each point the label of its nearest centroid. Second, move each centroid to the mean of the points that have its label.</p>
+<p>The first step is a distance matrix and an <code>argmin</code>. The second step is a group-by sum divided by a count. Both are in the book already.</p>
+<h2 id="the-function-you-build">The function you build</h2>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch05_broadcasting import dist_dot_centered      # chapter 5
+
+
+def kmeans(X, k, seed=0, max_iter=100):
+    &quot;&quot;&quot;Lloyd's algorithm. Returns (centroids, labels, iterations).&quot;&quot;&quot;
+    g = np.random.default_rng(seed)                           # chapter 7
+    C = X[g.choice(len(X), k, replace=False)].copy()          # chapter 3: copy, not a view
+    labels = np.full(len(X), -1)
+    for it in range(1, max_iter + 1):
+        new_labels = dist_dot_centered(X, C).argmin(axis=1)   # chapter 5
+        if np.array_equal(new_labels, labels):
+            return C, labels, it - 1
+        labels = new_labels
+        sums = np.zeros_like(C)
+        np.add.at(sums, labels, X)                            # chapter 4
+        counts = np.bincount(labels, minlength=k)
+        keep = counts &gt; 0                                     # an empty cluster keeps its centroid
+        C[keep] = sums[keep] / counts[keep, None]             # chapter 5: broadcast a column
+    return C, labels, max_iter
+
+
+centers = np.array([[0.0, 0.0], [6.0, 0.0], [3.0, 5.0]])
+g = np.random.default_rng(1)
+X = np.concatenate([c + 0.8 * g.standard_normal((300, 2)) for c in centers])
+truth = np.repeat(np.arange(3), 300)
+
+C, labels, iters = kmeans(X, 3, seed=1)
+print(&quot;iterations:&quot;, iters)
+print(&quot;centroids:&quot;)
+print(C.round(2))
+print(&quot;cluster sizes:&quot;, np.bincount(labels))
+</code></pre>
+<pre><code class="language-text">iterations: 3
+centroids:
+[[ 5.97 -0.06]
+ [-0.07  0.  ]
+ [ 3.02  5.02]]
+cluster sizes: [300 300 300]
+</code></pre>
+<p>The three true centers are <code>(0, 0)</code>, <code>(6, 0)</code> and <code>(3, 5)</code>. The centroids are close to these, in another order. Each cluster has about 300 points. The <code>for</code> loop runs over iterations, and there are few of them. No loop runs over points.</p>
+<p>The comments name the chapter of each line. The line <code>C[keep] = sums[keep] / counts[keep, None]</code> has a trap that chapter 5 described. The count has shape <code>(k,)</code> and the sums have shape <code>(k, d)</code>. Without <code>None</code>, the shapes <code>(k, d)</code> and <code>(k,)</code> do not align, or they align wrongly when <code>d</code> equals <code>k</code>.</p>
+<h2 id="check-it-against-the-slow-version">Check it against the slow version</h2>
+<p>A fast version that you did not check is a guess. The module has a second function, <code>kmeans_loop</code>, with the same algorithm and explicit Python loops, and the same starting centroids.</p>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch08_kmeans import kmeans, kmeans_loop, make_blobs
+
+centers = np.array([[0.0, 0.0], [6.0, 0.0], [3.0, 5.0]])
+X, truth = make_blobs(300, centers, 0.8, seed=1)
+
+C, labels, it = kmeans(X, 3, seed=1)
+Cl, labels_l, it_l = kmeans_loop(X, 3, seed=1)
+print(&quot;same labels:        &quot;, np.array_equal(labels, labels_l))
+print(&quot;same centroids:     &quot;, np.allclose(C, Cl))
+print(&quot;same iteration count:&quot;, it == it_l)
+print(&quot;largest centroid difference:&quot;, np.abs(C - Cl).max())
+</code></pre>
+<pre><code class="language-text">same labels:         True
+same centroids:      True
+same iteration count: True
+largest centroid difference: 0.0
+</code></pre>
+<p>The two versions agree on every label, and the largest centroid difference is 0.0 on this input. On other data the two versions can add in a different order and differ at the level of rounding. This is why the check uses <code>np.allclose</code> for the centroids and not <code>==</code>. If one label differs, the cause is almost always a tie that rounding broke the other way. In that case, compare the inertia.</p>
+<h2 id="the-check-that-found-a-real-problem">The check that found a real problem</h2>
+<p>Run the same function from 30 different seeds. The data are the same, and only the starting centroids differ. Count how often the run finds the three blobs, which we measure with <em>purity</em>: the fraction of points whose cluster has the same majority true label as they do.</p>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch08_kmeans import kmeans, kmeans_best, make_blobs, purity, inertia
+
+centers = np.array([[0.0, 0.0], [6.0, 0.0], [3.0, 5.0]])
+X, truth = make_blobs(300, centers, 0.8, seed=1)
+
+single = [purity(kmeans(X, 3, seed=s)[1], truth, 3) for s in range(30)]
+good = sum(p &gt; 0.95 for p in single)
+print(f&quot;single start: {good} of 30 seeds find the blobs&quot;)
+print(&quot;purity of the failures:&quot;, sorted({round(float(p), 2) for p in single if p &lt;= 0.95}))
+
+inertias = {}
+for s in range(30):
+    C, labels, _ = kmeans(X, 3, seed=s)
+    inertias[s] = (purity(labels, truth, 3) &gt; 0.95, inertia(X, C, labels))
+ok = [v for good, v in inertias.values() if good]
+bad = [v for good, v in inertias.values() if not good]
+print(f&quot;inertia of the {len(ok)} good runs:    {min(ok):.1f} to {max(ok):.1f}&quot;)
+print(f&quot;inertia of the {len(bad)} failed runs:  {min(bad):.1f} to {max(bad):.1f}&quot;)
+
+C, labels, _ = kmeans(X, 3, seed=0)
+print(&quot;seed 0: rows are clusters, columns are true blobs&quot;)
+print(np.array([np.bincount(truth[labels == j], minlength=3) for j in range(3)]))
+</code></pre>
+<pre><code class="language-text">single start: 24 of 30 seeds find the blobs
+purity of the failures: [0.67]
+inertia of the 24 good runs:    1176.7 to 1176.7
+inertia of the 6 failed runs:  6215.8 to 6503.7
+seed 0: rows are clusters, columns are true blobs
+[[  0 157   5]
+ [  0 143   0]
+ [300   0 295]]
+</code></pre>
+<p>In 6 of 30 runs, the algorithm stops at a purity of 0.67. The loop version agrees with the vectorized version on seed 1, so the cause is not a bug in the NumPy code. It is a property of the algorithm. The table for seed 0 shows the shape of the failure. One cluster holds all of blob 0 and nearly all of blob 2, so its centroid sits between them. The other two clusters split blob 1.</p>
+<p>No single step improves this result. It is a local minimum.</p>
+<p>Each run has an inertia, which is the sum of squared distances from the points to their centroids. The good runs all have the same inertia, and every failed run has a larger one. The inertia ranks the runs without the true labels, and this is why the standard fix works. Run the algorithm from several starts, and keep the run with the lowest inertia. The function <code>kmeans_best</code> does this with <code>SeedSequence.spawn</code>, as chapter 7 recommends.</p>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch08_kmeans import kmeans, kmeans_best, make_blobs, purity
+
+centers = np.array([[0.0, 0.0], [6.0, 0.0], [3.0, 5.0]])
+X, truth = make_blobs(300, centers, 0.8, seed=1)
+
+best = [purity(kmeans_best(X, 3, n_init=10, seed=s)[1], truth, 3) for s in range(30)]
+print(f&quot;best of 10 starts: {sum(p &gt; 0.95 for p in best)} of 30 seeds find the blobs&quot;)
+</code></pre>
+<pre><code class="language-text">best of 10 starts: 30 of 30 seeds find the blobs
+</code></pre>
+<p>With 10 starts, all 30 seeds find the blobs. If one start fails with probability 0.2, the chance that all 10 fail is 0.2 to the power 10, which is 1e-7. The 30 results agree with that arithmetic.</p>
+<h2 id="what-the-vectorization-bought">What the vectorization bought</h2>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+from examples.ch08_kmeans import kmeans, kmeans_loop, make_blobs
+
+centers = np.array([[0.0, 0.0], [6.0, 0.0], [3.0, 5.0]])
+Xs, _ = make_blobs(300, centers, 0.8, seed=2)
+t_loop = min(timeit.repeat(lambda: kmeans_loop(Xs, 3, seed=1), number=1, repeat=2))
+t_vec = min(timeit.repeat(lambda: kmeans(Xs, 3, seed=1), number=1, repeat=5))
+assert t_loop / t_vec &gt; 20
+print(f&quot;900 points: loop {t_loop * 1e3:.0f} ms, vectorized {t_vec * 1e3:.1f} ms&quot;)
+
+Xb, _ = make_blobs(100_000, centers, 0.8, seed=3)
+t_big = min(timeit.repeat(lambda: kmeans(Xb, 3, seed=1), number=1, repeat=3))
+print(f&quot;300,000 points, vectorized: {t_big * 1e3:.0f} ms&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+900 points: loop 29 ms, vectorized 0.8 ms
+300,000 points, vectorized: 319 ms
+</code></pre>
+<p>On 900 points the vectorized version is about 36 times faster on the build machine, and the assert requires 20. The loop time scales with the number of points. At 300,000 points it is 333 times larger, which is about 10 seconds, and the run does not include it.</p>
+<p>This is the usual pattern. The check runs on a small input, and the fast version runs on the real one.</p>
+<h2 id="the-traps-in-the-order-you-meet-them">The traps, in the order you meet them</h2>
+<p>Each row is a mistake that gives a wrong answer and no error. The chapter column says where this book measured it.</p>
+<table>
+<thead>
+<tr>
+<th>Trap</th>
+<th>Why it happens</th>
+<th>How to catch it</th>
+<th>Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>An array has a different dtype than you assumed</td>
+<td>NumPy picks the dtype from the data</td>
+<td>Print <code>.dtype</code> at every input and output</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Integers wrap</td>
+<td>The dtype fixes the number of bits</td>
+<td><code>checked_add</code>, or a wider dtype</td>
+<td>2</td>
+</tr>
+<tr>
+<td>A <code>float32</code> running sum drifts</td>
+<td>Small values are added to a large total</td>
+<td>Use <code>x.sum()</code>, or <code>float64</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td>A function changes its argument</td>
+<td>A slice is a view</td>
+<td><code>np.shares_memory</code>, <code>root</code></td>
+<td>3</td>
+</tr>
+<tr>
+<td>A small view keeps a large block alive</td>
+<td>The view holds a reference to its base</td>
+<td><code>.copy()</code></td>
+<td>3</td>
+</tr>
+<tr>
+<td>A write is lost</td>
+<td>A mask or index list makes a copy</td>
+<td>Write with the mask on the left</td>
+<td>4</td>
+</tr>
+<tr>
+<td>A repeated index is applied once</td>
+<td><code>a[i] += 1</code> reads, adds, then writes</td>
+<td><code>np.add.at</code>, <code>np.bincount</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td>A result is <code>(n, n)</code> and not <code>(n,)</code></td>
+<td>Broadcasting stretches a length-1 axis</td>
+<td>Assert the shape of a result</td>
+<td>5</td>
+</tr>
+<tr>
+<td>The distance matrix is wrong in <code>float32</code></td>
+<td><code>|a|² + |b|² − 2a·b</code> subtracts large numbers</td>
+<td>Center the data first</td>
+<td>5</td>
+</tr>
+<tr>
+<td><code>np.vectorize</code> is no faster</td>
+<td>It is a Python loop</td>
+<td>Use ufuncs and <code>np.where</code></td>
+<td>6</td>
+</tr>
+<tr>
+<td><code>inv(A) @ b</code> is inaccurate</td>
+<td>The inverse amplifies rounding</td>
+<td><code>solve</code>, and check the residual</td>
+<td>7</td>
+</tr>
+<tr>
+<td>A seed gives other numbers on another machine</td>
+<td>The stream depends on the NumPy version</td>
+<td>Write the version next to the seed</td>
+<td>7</td>
+</tr>
+<tr>
+<td>An iterative method stops at a poor answer</td>
+<td>A local minimum</td>
+<td>Several starts, keep the lowest inertia</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<p>The most useful single habit is the test in this chapter. Write the slow version first. It is short, it is obviously right, and it costs nothing to keep. Then write the fast version, and assert that the two agree on a small input.</p>
+<h2 id="what-this-book-left-out">What this book left out</h2>
+<p>This book is short, so it skips topics that have a real use. They are listed here so that you know where the edge is. This book did not measure any of them.</p>
+<ul>
+<li><code>np.einsum</code> writes a sum over named axes in one call, and replaces many <code>@</code> and broadcast chains.</li>
+<li>Structured arrays and <code>np.recarray</code> hold records with named fields of mixed types.</li>
+<li>Masked arrays hold missing values with a mask and not a <code>nan</code>.</li>
+<li><code>np.memmap</code> and <code>np.load(mmap_mode="r")</code> read an array from disk without loading it.</li>
+<li><code>np.fft</code> computes Fourier transforms, and <code>np.linalg</code> has factorizations beyond those used here.</li>
+<li>Compilers such as Numba, and libraries such as SciPy, cover the loops that chapter 6 could not vectorize.</li>
+</ul>
+<h2 id="what-you-have-now">What you have now</h2>
+<p>You have a clustering routine of 20 lines that you checked against a slow version, and a wrapper that fixes its one measured failure. You have a table of 13 traps, each with a measurement in an earlier chapter.</p>
+<p>The book made one claim, and every chapter tested it: an array program is fast because of how it uses memory, and it is wrong in the places where it hides that use. The shape, the dtype and the strides from chapter 1 explain every row of the table above.</p></section><section class="chapter" id="exercises-chapter-1"><h1 id="exercises-chapter-1">Exercises — Chapter 1</h1>
+<p>Chapter: The array · module: <a href="../examples/ch01_array.py"><code>examples/ch01_array.py</code></a> · solutions: 01</p>
+<p><strong>1. [measure]</strong> Make <code>np.zeros((100, 200, 3), dtype=np.float32)</code>. Report its <code>strides</code> and its <code>nbytes</code>. Expected: strides <code>(2400, 12, 4)</code> and <code>nbytes</code> 240000, exact.</p>
+<p><strong>2. [break]</strong> Chapter 1 says that a transpose is not C-contiguous. Find a 2-D array for which the transpose is still C-contiguous. Explain why the flag stays <code>True</code>. Expected: a shape with an axis of length 1, for example <code>(1, 5)</code>.</p>
+<p><strong>3. [judge]</strong> A colleague stores 20 sensor readings per request in a NumPy array, and the service handles thousands of requests each second. Another colleague says that a plain list is better. What does a good answer weigh? (Consider the fixed cost per call from chapter 1, what the readings are used for next, and what a measurement on the real service must show.)</p></section><section class="chapter" id="exercises-chapter-2"><h1 id="exercises-chapter-2">Exercises — Chapter 2</h1>
+<p>Chapter: Dtypes, and the answers that change silently · module: <a href="../examples/ch02_dtypes.py"><code>examples/ch02_dtypes.py</code></a> · solutions: 02</p>
+<p><strong>1. [measure]</strong> Find the smallest positive integer <code>n</code> for which <code>np.float32(n) + np.float32(1) == np.float32(n)</code>. Expected: 16777216, exact.</p>
+<p><strong>2. [break]</strong> The cumulative sum of ten million <code>float32</code> values of 0.1 is wrong by 8.8 percent in chapter 2. Change one argument of <code>np.cumsum</code>, and nothing else, so that the last value is within 1e-6 (relative) of 1,000,000.015. Expected: <code>dtype=np.float64</code>, and a relative error below 1e-6.</p>
+<p><strong>3. [judge]</strong> A library function adds two <code>uint8</code> images. What must it do on overflow: wrap, clip at 255, or raise an error? What does a good answer weigh? (Consider who calls the function, what a wrapped pixel looks like, and what each choice costs in speed and in surprise.)</p></section><section class="chapter" id="exercises-chapter-3"><h1 id="exercises-chapter-3">Exercises — Chapter 3</h1>
+<p>Chapter: Views and copies · module: <a href="../examples/ch03_views.py"><code>examples/ch03_views.py</code></a> · solutions: 03</p>
+<p><strong>1. [measure]</strong> Make <code>big = np.zeros((1000, 1000))</code> and <code>small = big[:10]</code>. How many bytes does <code>small</code> keep alive through <code>small.base</code>? Expected: 8000000, exact.</p>
+<p><strong>2. [break]</strong> The function <code>center</code> in chapter 3 changes the column that the caller passes in. Change one line so that the caller's data stay the same, and show that they do. Expected: the original array equals its copy from before the call.</p>
+<p><strong>3. [judge]</strong> You write a public function that takes an array and returns a part of it. Does it return a view or a copy? What does a good answer weigh? (Consider memory, the caller's later writes, and what the documentation can promise.)</p></section><section class="chapter" id="exercises-chapter-4"><h1 id="exercises-chapter-4">Exercises — Chapter 4</h1>
+<p>Chapter: Indexing · module: <a href="../examples/ch04_indexing.py"><code>examples/ch04_indexing.py</code></a> · solutions: 04</p>
+<p><strong>1. [measure]</strong> Let <code>idx = np.array([0, 0, 0, 1, 1, 2])</code>. Add 1 at each index of <code>np.zeros(3, dtype=int)</code> in two ways.</p>
+<ul>
+<li>Use <code>a[idx] += 1</code>.</li>
+<li>Use <code>np.add.at</code>.</li>
+</ul>
+<p>Report both results. Expected: <code>[1 1 1]</code> and <code>[3 2 1]</code>, exact.</p>
+<p><strong>2. [break]</strong> The <code>np.where(x &gt; 0, np.log(x), 0)</code> call in chapter 4 gives a warning and not an error. Wrap the call so that it raises <code>FloatingPointError</code>, and say what that shows about <code>np.where</code>. Expected: the message <code>divide by zero encountered in log</code>.</p>
+<p><strong>3. [judge]</strong> A team uses <code>np.add.at</code>. They say that <code>np.bincount</code> is "known to be faster". Chapter 4 measured the two as equal on one version of NumPy. What does a good answer weigh before the team changes the code?</p>
+<p>Consider the version, the key range, the profile of their own data, and the cost of the change.</p></section><section class="chapter" id="exercises-chapter-5"><h1 id="exercises-chapter-5">Exercises — Chapter 5</h1>
+<p>Chapter: Broadcasting · module: <a href="../examples/ch05_broadcasting.py"><code>examples/ch05_broadcasting.py</code></a> · solutions: 05</p>
+<p><strong>1. [measure]</strong> Use <code>tracemalloc</code> to measure the peak memory of <code>dist_broadcast</code> for two sets of 1000 points in 32 dimensions. Expected: 264 MB, within ±10 percent. State the number of values in the temporary array and the result of the arithmetic.</p>
+<p><strong>2. [break]</strong> Make <code>dist_dot</code> return a maximum error larger than 1.0 for <code>float64</code> points that lie in a cube of side 1. Change only the position of the cube. Expected: an offset of 1e8 gives an error of about 4. Explain the result with the gap between neighbor <code>float64</code> values.</p>
+<p><strong>3. [judge]</strong> Your service computes distances for 50 points against 50,000 points in 128 dimensions, in <code>float32</code>, on a machine with 8 GB. Which of the three versions do you ship? What does a good answer weigh? (Consider the size of the temporary array, the precision, and whether centering is possible when the second set changes at each call.)</p></section><section class="chapter" id="exercises-chapter-6"><h1 id="exercises-chapter-6">Exercises — Chapter 6</h1>
+<p>Chapter: Ufuncs and vectorization · module: <a href="../examples/ch06_ufuncs.py"><code>examples/ch06_ufuncs.py</code></a> · solutions: 06</p>
+<p><strong>1. [measure]</strong> For 100,000 values, measure the ratio of the time of <code>ma_window</code> to the time of <code>ma_cumsum</code> at window 10 and at window 1000. Expected: the ratio at window 1000 is above 10, and it is larger than the ratio at window 10. Say why the ratio depends on the window.</p>
+<p><strong>2. [break]</strong> <code>np.vectorize(lambda v: 0 if v &lt; 1 else v)(np.array([0.5, 2.7]))</code> must give <code>[0. 2.7]</code>. Run it and report the result. Then repair it with one argument. Expected: the result <code>[0 2]</code> first, and <code>[0. 2.7]</code> after the repair.</p>
+<p><strong>3. [judge]</strong> A colleague wants to rewrite the exponential moving average of chapter 6 in Numba. What does a good answer weigh? (Consider the measured 3.6 million steps a second, the size of the real data, the cost of a new dependency, and what a profile must show first.)</p></section><section class="chapter" id="exercises-chapter-7"><h1 id="exercises-chapter-7">Exercises — Chapter 7</h1>
+<p>Chapter: Linear algebra and random numbers · module: <a href="../examples/ch07_linalg_random.py"><code>examples/ch07_linalg_random.py</code></a> · solutions: 07</p>
+<p><strong>1. [measure]</strong> Compute <code>np.linalg.cond</code> of the 10-by-10 Hilbert matrix. Expected: 1.6e13, within a factor of 2.</p>
+<p><strong>2. [break]</strong> <code>np.linalg.solve</code> gave an error of 1.2e-7 for the 8-by-8 Hilbert system in <code>float64</code>. Change only the dtype of the inputs so that the error is larger than 1. Expected: <code>float32</code> gives an error near 7. Explain the result with the condition number and the <code>float32</code> epsilon.</p>
+<p><strong>3. [judge]</strong> A team of five runs experiments. Each script has <code>np.random.seed(0)</code> at the top. The scripts import shared helper functions that also draw random numbers. What does a good answer weigh before the team changes its practice? (Consider hidden coupling, reproducibility across versions, and the cost of passing a generator through every function.)</p></section><section class="chapter" id="exercises-chapter-8"><h1 id="exercises-chapter-8">Exercises — Chapter 8</h1>
+<p>Chapter: Putting it together · module: <a href="../examples/ch08_kmeans.py"><code>examples/ch08_kmeans.py</code></a> · solutions: 08</p>
+<p><strong>1. [measure]</strong> Use <code>make_blobs(300, centers, 0.8, seed=2)</code> with the centers of chapter 8. Run <code>kmeans</code> once from each of the seeds 0 to 29. Count the runs that have a purity of 0.95 or less. Expected: 5, exact.</p>
+<p><strong>2. [break]</strong> Replace the starting centroids in <code>kmeans</code> with the view <code>X[:k]</code>, and remove the <code>.copy()</code>. Run the function and report whether the input <code>X</code> changed. Expected: <code>X</code> changed. Explain which chapter predicted it.</p>
+<p><strong>3. [judge]</strong> Best-of-10 starts costs ten times as much as one start. A colleague says that a smarter initialization such as k-means++ makes it unnecessary. What does a good answer weigh? (Consider the measured failure rate of 6 in 30, the cost per run at your data size, and what you can measure on your data before you decide.)</p></section><section class="chapter" id="solutions-chapter-1"><h1 id="solutions-chapter-1">Solutions — Chapter 1</h1>
+<p>Exercises: 01 · chapter: The array</p>
+<h2 id="1-measure">1. [measure]</h2>
+<p>The strides are the number of bytes to jump along each axis. The last axis has 3 values of 4 bytes, so its stride is 4. The middle axis jumps over one row of 3 values, which is 12 bytes. The first axis jumps over 200 rows of 12 bytes, which is 2400 bytes.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.zeros((100, 200, 3), dtype=np.float32)
+print(a.strides)
+print(a.nbytes)
+assert a.strides == (2400, 12, 4)
+assert a.nbytes == 100 * 200 * 3 * 4
+</code></pre>
+<pre><code class="language-text">(2400, 12, 4)
+240000
+</code></pre>
+<h2 id="2-break">2. [break]</h2>
+<p>The transpose of a <code>(1, 5)</code> array is a <code>(5, 1)</code> array. An axis of length 1 is never stepped along, so its stride does not matter, and NumPy sets the contiguous flag from the other axes.</p>
+<pre><code class="language-python">import numpy as np
+
+a = np.zeros((1, 5))
+print(&quot;a   shape&quot;, a.shape, &quot;strides&quot;, a.strides, &quot;contiguous&quot;, a.flags.c_contiguous)
+print(&quot;a.T shape&quot;, a.T.shape, &quot;strides&quot;, a.T.strides, &quot;contiguous&quot;, a.T.flags.c_contiguous)
+assert a.T.flags.c_contiguous
+assert np.shares_memory(a, a.T)
+</code></pre>
+<pre><code class="language-text">a   shape (1, 5) strides (40, 8) contiguous True
+a.T shape (5, 1) strides (8, 40) contiguous True
+</code></pre>
+<p>The strides changed from <code>(40, 8)</code> to <code>(8, 40)</code>, and the array is still contiguous. The flag describes the memory order that a walk follows. A walk over a <code>(5, 1)</code> array has only one axis that moves.</p>
+<h2 id="3-judge">3. [judge]</h2>
+<p><strong>Position.</strong> Keep the list, unless a measurement on the real service shows that the array helps.</p>
+<p><strong>What a good answer weighs.</strong> Twenty values is near the size where the fixed cost of an array call is larger than the work. The chapter measured a loss for three values. At thousands of requests each second, the cost per request matters.</p>
+<p>The next step of the readings is the second fact. If the next step is a mean and a threshold, a list is enough. If the next step is a matrix product with a model, the model needs an array, and the conversion cost is paid once. The measurement must use the real request rate and the real next step. A benchmark of 20 values alone is not enough.</p>
+<p><strong>Strongest objection.</strong> The array gives the same code path as the offline batch job that runs on millions of readings. One code path has fewer bugs. This is an argument about maintenance and not about speed.</p>
+<p><strong>What overturns the position.</strong> A profile can show that the conversion costs less than 5 percent of the request time. A requirement to share code with the batch job has the same effect.</p></section><section class="chapter" id="solutions-chapter-2"><h1 id="solutions-chapter-2">Solutions — Chapter 2</h1>
+<p>Exercises: 02 · chapter: Dtypes, and the answers that change silently</p>
+<h2 id="1-measure">1. [measure]</h2>
+<p>A <code>float32</code> has 24 bits of precision. Below 2²⁴ every integer is exact and has a gap of at most 1 to its neighbor. At 2²⁴ the gap becomes 2, and adding 1 rounds back to the same number.</p>
+<pre><code class="language-python">import numpy as np
+
+n = np.arange(1, 2 ** 24 + 2, dtype=np.float32)        # every integer up to 2**24 + 1
+stuck = np.flatnonzero(n + np.float32(1) == n)
+smallest = int(n[stuck[0]])
+print(smallest)
+assert smallest == 2 ** 24 == 16777216
+</code></pre>
+<pre><code class="language-text">16777216
+</code></pre>
+<p>The test runs on every integer from 1 to 2²⁴ + 1, so it finds the smallest <code>n</code> and not only a power of 2.</p>
+<h2 id="2-break">2. [break]</h2>
+<p>The argument is <code>dtype=np.float64</code>. The cumulative sum then keeps its running total in <code>float64</code>, which has digits to spare.</p>
+<pre><code class="language-python">import numpy as np
+
+x = np.full(10_000_000, 0.1, dtype=np.float32)
+exact = float(np.float32(0.1)) * x.size
+
+plain = float(np.cumsum(x)[-1])
+wide = float(np.cumsum(x, dtype=np.float64)[-1])
+print(f&quot;plain cumsum relative error: {abs(plain - exact) / exact:.2e}&quot;)
+print(f&quot;float64 cumsum relative error: {abs(wide - exact) / exact:.2e}&quot;)
+assert abs(plain - exact) / exact &gt; 1e-2
+assert abs(wide - exact) / exact &lt; 1e-6
+</code></pre>
+<pre><code class="language-text">plain cumsum relative error: 8.79e-02
+float64 cumsum relative error: 0.00e+00
+</code></pre>
+<p>The input is still <code>float32</code>. Only the accumulator changed. The cost is memory: the result of <code>cumsum</code> is now 80 MB and not 40 MB.</p>
+<h2 id="3-judge">3. [judge]</h2>
+<p><strong>Position.</strong> Raise an error by default. Offer a <code>clip=True</code> option for the caller that wants saturation. Wrapping is almost never what the caller means.</p>
+<p><strong>What a good answer weighs.</strong> The caller of an image function usually wants a bright pixel to stay bright. That is a clip. A wrapped pixel turns a bright area dark, and the image looks plausible and is wrong. An error stops the program at the first bad input. The cost is one extra comparison pass.</p>
+<p>A clip hides that the input was out of range, and that fact can be the information that the caller needs. Wrapping is correct for hash functions and modular counters. These are not images.</p>
+<p><strong>Strongest objection.</strong> In a video pipeline that runs at 60 frames a second, an error stops the stream on one bad frame. For this caller the silent clip is the safe choice. The answer is the option: the default is the error, and the pipeline sets <code>clip=True</code>.</p>
+<p><strong>What overturns the position.</strong> A measurement can show that the check costs more than the budget of the caller. An example is 10 percent of the frame time. Then the default must change, and the first line of the documentation must say so.</p></section><section class="chapter" id="solutions-chapter-3"><h1 id="solutions-chapter-3">Solutions — Chapter 3</h1>
+<p>Exercises: 03 · chapter: Views and copies</p>
+<h2 id="1-measure">1. [measure]</h2>
+<pre><code class="language-python">import numpy as np
+
+big = np.zeros((1000, 1000))
+small = big[:10]
+print(&quot;small owns:&quot;, small.nbytes, &quot;bytes&quot;)
+print(&quot;small keeps:&quot;, small.base.nbytes, &quot;bytes alive&quot;)
+assert small.base.nbytes == 8_000_000
+assert small.nbytes == 80_000
+</code></pre>
+<pre><code class="language-text">small owns: 80000 bytes
+small keeps: 8000000 bytes alive
+</code></pre>
+<p>The slice has 10 rows of 1000 values of 8 bytes, which is 80,000 bytes. The base has 1000 rows, which is 8,000,000 bytes. The ratio is 100.</p>
+<h2 id="2-break">2. [break]</h2>
+<p>Replace <code>x -= x.mean()</code> with <code>x = x - x.mean()</code>. The second form makes a new array and binds the name <code>x</code> to it. The array of the caller is not touched.</p>
+<pre><code class="language-python">import numpy as np
+
+
+def center(x):
+    x = x - x.mean()
+    return x
+
+
+data = np.array([[1.0, 10.0], [3.0, 20.0], [5.0, 30.0]])
+before = data.copy()
+centered = center(data[:, 0])
+print(&quot;data unchanged:&quot;, np.array_equal(data, before))
+print(&quot;result:&quot;, centered)
+assert np.array_equal(data, before)
+</code></pre>
+<pre><code class="language-text">data unchanged: True
+result: [-2.  0.  2.]
+</code></pre>
+<h2 id="3-judge">3. [judge]</h2>
+<p><strong>Position.</strong> Return a view when the function is a selection that the caller keeps in step with the original. Return a copy when the function computes something. Write the choice in the first line of the docstring.</p>
+<p><strong>What a good answer weighs.</strong> A view costs nothing and keeps the base alive, which can be a large block. A copy costs memory and time and breaks the link. A later write by the caller does not change the original.</p>
+<p>The danger of a view is a write that the caller does not expect. The danger of a copy is a write that the caller expects and does not get. NumPy returns views for slices and copies for index lists, so a caller who knows NumPy expects the same pattern.</p>
+<p><strong>Strongest objection.</strong> A function that returns a view or a copy depending on the input, like <code>reshape</code>, is a trap. It is better to always copy. This is correct for a public function. The cost is memory on large arrays, and the answer is to document the exception where the cost is measured.</p>
+<p><strong>What overturns the position.</strong> A user report of a lost write or an unexpected change shows that callers do not read the docstring. Then return copies, and add a separate function that returns a view.</p></section><section class="chapter" id="solutions-chapter-4"><h1 id="solutions-chapter-4">Solutions — Chapter 4</h1>
+<p>Exercises: 04 · chapter: Indexing</p>
+<h2 id="1-measure">1. [measure]</h2>
+<pre><code class="language-python">import numpy as np
+
+idx = np.array([0, 0, 0, 1, 1, 2])
+
+a = np.zeros(3, dtype=int)
+a[idx] += 1
+b = np.zeros(3, dtype=int)
+np.add.at(b, idx, 1)
+print(&quot;a[idx] += 1:&quot;, a)
+print(&quot;np.add.at  :&quot;, b)
+assert a.tolist() == [1, 1, 1]
+assert b.tolist() == [3, 2, 1]
+</code></pre>
+<pre><code class="language-text">a[idx] += 1: [1 1 1]
+np.add.at  : [3 2 1]
+</code></pre>
+<p>Index 0 appears 3 times and index 1 appears 2 times. The statement <code>a[idx] += 1</code> reads <code>a[idx]</code> once, so each position gets only one update.</p>
+<h2 id="2-break">2. [break]</h2>
+<p><code>np.errstate(all="raise")</code> turns every floating-point warning into an exception in its block.</p>
+<pre><code class="language-python">import numpy as np
+
+x = np.array([1.0, 0.0])
+with np.errstate(all=&quot;raise&quot;):
+    try:
+        np.where(x &gt; 0, np.log(x), 0)
+    except FloatingPointError as e:
+        print(type(e).__name__, &quot;-&quot;, e)
+</code></pre>
+<pre><code class="language-text">FloatingPointError - divide by zero encountered in log
+</code></pre>
+<p>The error comes from <code>np.log(x)</code>, which <code>np.where</code> receives as an argument. The condition <code>x &gt; 0</code> is false for the second element, and it does not stop the log from running. This shows that <code>np.where</code> selects among values that are already computed.</p>
+<h2 id="3-judge">3. [judge]</h2>
+<p><strong>Position.</strong> Do not change the code until a profile of the real data shows that this call is a large part of the run time.</p>
+<p><strong>What a good answer weighs.</strong> The advice is old. It was true for NumPy 1.x. It is not true on 2.5.4 for the input of chapter 4, where the two are within 25 percent. The version of the team is the first fact to check.</p>
+<p>The key range is the second fact. The function <code>np.bincount</code> needs non-negative integers and makes an array as long as the largest key. That is wasteful for sparse keys. The third fact is how much of the run time the call takes. A change that saves 20 percent of 2 percent of the run is not worth a review.</p>
+<p><strong>Strongest objection.</strong> The function <code>np.bincount</code> states the intent more directly, and it reads better. This is a fair reason to change. It is a reason about readability, and it needs no speed claim.</p>
+<p><strong>What overturns the position.</strong> A profile that shows the call above 20 percent of the run time overturns it. A measurement on the team's own data and version that shows <code>bincount</code> is faster by a useful margin has the same effect.</p></section><section class="chapter" id="solutions-chapter-5"><h1 id="solutions-chapter-5">Solutions — Chapter 5</h1>
+<p>Exercises: 05 · chapter: Broadcasting</p>
+<h2 id="1-measure">1. [measure]</h2>
+<p>The temporary array has <code>n * m * d</code> values: 1000 × 1000 × 32 = 32,000,000. At 8 bytes each that is 256 MB. The result adds 1000 × 1000 × 8 bytes, which is 8 MB. The sum is 264 MB.</p>
+<pre><code class="language-python">import tracemalloc
+
+import numpy as np
+
+from examples.ch05_broadcasting import dist_broadcast
+
+A = np.random.default_rng(0).random((1000, 32))
+tracemalloc.start()
+dist_broadcast(A, A)
+_, peak = tracemalloc.get_traced_memory()
+tracemalloc.stop()
+print(&quot;values in the temporary array:&quot;, 1000 * 1000 * 32)
+print(&quot;expected MB:&quot;, (1000 * 1000 * 32 + 1000 * 1000) * 8 / 1e6)
+print(&quot;measured peak MB:&quot;, round(peak / 1e6))
+assert abs(peak / 1e6 - 264) &lt; 26
+</code></pre>
+<pre><code class="language-text">values in the temporary array: 32000000
+expected MB: 264.0
+measured peak MB: 264
+</code></pre>
+<h2 id="2-break">2. [break]</h2>
+<p>At an offset of 1e8, the squared norms are about 3e16. The gap between neighbor <code>float64</code> values at 3e16 is 4. Each term of the subtraction <code>|a|² + |b|² − 2a·b</code> has a rounding error of about one gap. The squared distance is wrong by a few gaps, about 16. The square root of 16 is 4.</p>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch05_broadcasting import dist_dot, dist_loop
+
+for offset in (1e4, 1e6, 1e8):
+    P = np.random.default_rng(0).random((30, 3)) + offset
+    err = np.abs(dist_dot(P, P) - dist_loop(P, P)).max()
+    print(f&quot;offset {offset:8.0e}  max error {err:.2e}&quot;)
+assert err &gt; 1.0
+print(&quot;gap at 3e16:&quot;, np.spacing(3e16))
+</code></pre>
+<pre><code class="language-text">offset    1e+04  max error 3.45e-04
+offset    1e+06  max error 3.12e-02
+offset    1e+08  max error 4.00e+00
+gap at 3e16: 4.0
+</code></pre>
+<p>The points lie in a cube of side 1, so the true distances are at most 1.7. An error of 4 is larger than every true distance. Centering removes the problem, because it moves the cube to the origin before the subtraction.</p>
+<h2 id="3-judge">3. [judge]</h2>
+<p><strong>Position.</strong> Ship the dot version with centering. Process the 50,000 points in blocks. Test it against the broadcast version on a sample.</p>
+<p><strong>What a good answer weighs.</strong> The broadcast version needs 50 × 50,000 × 128 × 4 bytes, which is 1.28 GB in <code>float32</code>. The machine has 8 GB. One request fits, and a few at the same time fail. The dot version needs about the size of the result, which is 10 MB.</p>
+<p>Precision is the open question. Centering with the mean of the 50,000 fixed points works if they do not change between calls. If both sets change, the mean of the 50 query points is a cheaper way to center. A fixed reference vector also works.</p>
+<p><strong>Strongest objection.</strong> The dot version in <code>float32</code> loses digits even after centering, if the points are spread over a large range. The answer is to measure the error that the service cares about. For example, measure whether the nearest neighbor is the same one. Do not measure the distance error.</p>
+<p><strong>What overturns the position.</strong> Compare with the broadcast version in <code>float64</code> on real data. Suppose the nearest neighbor changes for more than a small fraction of the queries. Then use <code>float64</code> for the cross term, or compute the final candidates exactly.</p></section><section class="chapter" id="solutions-chapter-6"><h1 id="solutions-chapter-6">Solutions — Chapter 6</h1>
+<p>Exercises: 06 · chapter: Ufuncs and vectorization</p>
+<h2 id="1-measure">1. [measure]</h2>
+<pre><code class="language-python">import timeit
+
+import numpy as np
+
+from examples.ch06_ufuncs import ma_cumsum, ma_window
+
+x = np.random.default_rng(0).random(100_000)
+ratio = {}
+for w in (10, 1000):
+    t_window = min(timeit.repeat(lambda: ma_window(x, w), number=1, repeat=3))
+    t_cumsum = min(timeit.repeat(lambda: ma_cumsum(x, w), number=1, repeat=3))
+    ratio[w] = t_window / t_cumsum
+assert ratio[1000] &gt; 10
+assert ratio[1000] &gt; ratio[10]
+print(&quot;window time grows with w:&quot;, ratio[1000] &gt; ratio[10])
+print(f&quot;ratio at w=10: {ratio[10]:.0f}, at w=1000: {ratio[1000]:.0f}&quot;)
+</code></pre>
+<pre><code class="language-text"># output varies
+window time grows with w: True
+ratio at w=10: 5, at w=1000: 51
+</code></pre>
+<p>The window version does <code>w</code> additions for each output value. The cumulative-sum version does two, whatever the size of <code>w</code>. The ratio therefore grows in proportion to <code>w</code>, and the numbers above are of that order: 5 at <code>w = 10</code> and 51 at <code>w = 1000</code>.</p>
+<h2 id="2-break">2. [break]</h2>
+<p><code>np.vectorize</code> finds the output type by calling the function on the first element. The first call returns the integer 0, so the output type is <code>int</code>, and the value 2.7 is cut to 2. NumPy gives no warning.</p>
+<pre><code class="language-python">import numpy as np
+
+f = lambda v: 0 if v &lt; 1 else v
+broken = np.vectorize(f)(np.array([0.5, 2.7]))
+fixed = np.vectorize(f, otypes=[float])(np.array([0.5, 2.7]))
+print(&quot;broken:&quot;, broken)
+print(&quot;fixed: &quot;, fixed)
+assert broken.tolist() == [0, 2]
+assert fixed.tolist() == [0.0, 2.7]
+</code></pre>
+<pre><code class="language-text">broken: [0 2]
+fixed:  [0.  2.7]
+</code></pre>
+<p>The repair is <code>otypes=[float]</code>. This is a second reason, after speed, to prefer <code>np.where</code> over <code>np.vectorize</code>: <code>np.where(v &lt; 1, 0.0, v)</code> has no output type to guess.</p>
+<h2 id="3-judge">3. [judge]</h2>
+<p><strong>Position.</strong> Not yet. First measure the run time on the real data.</p>
+<p><strong>What a good answer weighs.</strong> The loop ran at 3.6 million steps a second. A series of one million values takes 0.3 seconds. A series of 100,000 takes 0.03 seconds. If the job runs once an hour, this is not a problem. Numba adds a dependency, a compile step at startup and a second place for bugs.</p>
+<p>If a request has 10,000 series of 100,000 values each, the same arithmetic gives 5 minutes. Then the speed matters. The size of the real data and the time budget decide. The chapter measured only the speed of the loop.</p>
+<p><strong>Strongest objection.</strong> A library routine for linear filters applies this recurrence in compiled code, with no new compiler. That is a better first step than Numba. This book did not measure it. A good answer says so and measures it before the choice.</p>
+<p><strong>What overturns the position.</strong> A profile of the real job can show the loop above the time budget. A measurement can then show that the library routine does not meet the budget either. Then Numba is the next step.</p></section><section class="chapter" id="solutions-chapter-7"><h1 id="solutions-chapter-7">Solutions — Chapter 7</h1>
+<p>Exercises: 07 · chapter: Linear algebra and random numbers</p>
+<h2 id="1-measure">1. [measure]</h2>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch07_linalg_random import hilbert
+
+c = np.linalg.cond(hilbert(10))
+print(f&quot;cond(H10) = {c:.2e}&quot;)
+assert 0.8e13 &lt; c &lt; 3.2e13
+</code></pre>
+<pre><code class="language-text">cond(H10) = 1.60e+13
+</code></pre>
+<p>The textbook value is 1.6e13. With a rounding unit of 1.1e-16, the rule of chapter 7 predicts an error of about 2e-3 for <code>solve</code> on this system.</p>
+<h2 id="2-break">2. [break]</h2>
+<p>The <code>float32</code> epsilon is 1.2e-7. The condition number of the 8-by-8 Hilbert matrix is 1.5e10. The product is 1.8e3, which is more than the size of the answer. No digit is guaranteed, and the measured error is of order 1.</p>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch07_linalg_random import hilbert
+
+H = hilbert(8)
+b = H @ np.ones(8)
+e64 = np.abs(np.linalg.solve(H, b) - 1).max()
+e32 = np.abs(np.linalg.solve(H.astype(np.float32), b.astype(np.float32)) - 1).max()
+print(f&quot;float64 error: {e64:.1e}&quot;)
+print(f&quot;float32 error: {e32:.1f}&quot;)
+assert e64 &lt; 1e-5
+assert e32 &gt; 1.0
+print(&quot;cond * eps32 =&quot;, f&quot;{np.linalg.cond(H) * np.finfo(np.float32).eps:.1e}&quot;)
+</code></pre>
+<pre><code class="language-text">float64 error: 1.2e-07
+float32 error: 6.8
+cond * eps32 = 1.8e+03
+</code></pre>
+<p>The rule of thumb gives an upper bound and not a prediction. The measured error is 6.8, which is below the bound of 1.8e3 and far above 1.</p>
+<h2 id="3-judge">3. [judge]</h2>
+<p><strong>Position.</strong> Stop using the global seed. Create one generator in the main script. Pass it to every function that draws numbers.</p>
+<p><strong>What a good answer weighs.</strong> The shared helpers draw from the same global state. A change in one helper changes the numbers in every script that calls it, and nobody sees the link. A passed generator makes the dependency visible in the signature.</p>
+<p>The cost is one argument on each function and one decision about who owns the seed. For parallel work, add <code>SeedSequence.spawn</code>. No method of seeding promises the same stream across NumPy versions, so each result must also record the version.</p>
+<p><strong>Strongest objection.</strong> Five scripts already work. A change of every signature touches all of them for no visible gain. This is true for the code that exists. The practical answer is to apply the rule to new code and to the helpers that you change anyway.</p>
+<p><strong>What overturns the position.</strong> A search of the helpers for <code>np.random</code> calls takes minutes. If no helper draws random numbers, the global seed has no hidden coupling, and the change gives little.</p></section><section class="chapter" id="solutions-chapter-8"><h1 id="solutions-chapter-8">Solutions — Chapter 8</h1>
+<p>Exercises: 08 · chapter: Putting it together</p>
+<h2 id="1-measure">1. [measure]</h2>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch08_kmeans import kmeans, make_blobs, purity
+
+centers = np.array([[0.0, 0.0], [6.0, 0.0], [3.0, 5.0]])
+X, truth = make_blobs(300, centers, 0.8, seed=2)
+failures = [s for s in range(30) if purity(kmeans(X, 3, seed=s)[1], truth, 3) &lt;= 0.95]
+print(&quot;failed seeds:&quot;, failures)
+print(&quot;count:&quot;, len(failures))
+assert len(failures) == 5
+</code></pre>
+<pre><code class="language-text">failed seeds: [0, 6, 13, 15, 19]
+count: 5
+</code></pre>
+<p>The data of seed 2 give 5 failures in 30. The data of seed 1 in chapter 8 give 6. The failure rate depends on the data, and this is why the chapter reports a count and not a probability.</p>
+<h2 id="2-break">2. [break]</h2>
+<p>A basic slice is a view. The first <code>kmeans</code> step then writes the new centroids into <code>C</code>, which is the first <code>k</code> rows of <code>X</code>. The input changes, and the three rows that changed are the first three rows of <code>X</code>.</p>
+<pre><code class="language-python">import numpy as np
+
+from examples.ch05_broadcasting import dist_dot_centered
+from examples.ch08_kmeans import make_blobs
+
+
+def kmeans_view(X, k, max_iter=100):
+    C = X[:k]                                    # a view: the .copy() is gone
+    labels = np.full(len(X), -1)
+    for _ in range(max_iter):
+        new_labels = dist_dot_centered(X, C).argmin(axis=1)
+        if np.array_equal(new_labels, labels):
+            break
+        labels = new_labels
+        sums = np.zeros_like(C)
+        np.add.at(sums, labels, X)
+        counts = np.bincount(labels, minlength=k)
+        keep = counts &gt; 0
+        C[keep] = sums[keep] / counts[keep, None]
+    return C, labels
+
+
+centers = np.array([[0.0, 0.0], [6.0, 0.0], [3.0, 5.0]])
+X, _ = make_blobs(300, centers, 0.8, seed=1)
+before = X.copy()
+C, labels = kmeans_view(X, 3)
+print(&quot;C shares memory with X:&quot;, np.shares_memory(C, X))
+print(&quot;X unchanged:&quot;, np.array_equal(X, before))
+print(&quot;rows that changed:&quot;, int((X != before).any(axis=1).sum()))
+assert not np.array_equal(X, before)
+</code></pre>
+<pre><code class="language-text">C shares memory with X: True
+X unchanged: False
+rows that changed: 3
+</code></pre>
+<p>Chapter 3 predicted this: the rule is that basic slicing makes a view, and a write through a view changes the original. The original <code>kmeans</code> uses <code>X[g.choice(...)]</code>, an index list, which always makes a copy, so the <code>.copy()</code> there is for safety and not for need. The exercise shows what the safety protects against if a later edit changes the index to a slice.</p>
+<h2 id="3-judge">3. [judge]</h2>
+<p><strong>Position.</strong> Keep best-of-10 until you measure k-means++ on your own data. Then decide with the failure rate and the cost.</p>
+<p><strong>What a good answer weighs.</strong> On the blobs of chapter 8, 6 of 30 single starts fail, and 10 starts remove the failures. The cost is a factor of 10 in time. A smarter initialization spreads the starting centroids and reduces failures. It also costs a pass over the data. Whether it removes the need for restarts depends on the data and on <code>k</code>. This book did not measure it.</p>
+<p>At 900 points a run takes under a millisecond, so ten starts is cheap. At 300,000 points a start takes 0.3 seconds. Three seconds for ten starts is small for a batch job and large for a request.</p>
+<p><strong>Strongest objection.</strong> Restarts treat a property of the initialization as a statistical problem. A better method removes it at the source. This is correct in principle. It is an argument to implement the better initialization and measure it. It is not a reason to remove the restarts before the measurement.</p>
+<p><strong>What overturns the position.</strong> Measure the better initialization on the real data. Suppose it fails in fewer than 1 run in 100 with a single start. Suppose also that its cost is below that of two plain starts. Then one start is enough.</p></section>
+</body></html>
