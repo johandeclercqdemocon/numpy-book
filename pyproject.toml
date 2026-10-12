@@ -1,0 +1,11 @@
+[project]
+name = "numpy-book"
+version = "0.1.0"
+description = "Runnable code and claim checks for 'NumPy, Measured'"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+]
+
+# NumPy is the subject, so it is the only dependency. Nothing here calls the network
+# or a model; the whole book verifies offline and for free.
