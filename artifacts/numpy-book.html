@@ -461,9 +461,9 @@ print(f&quot;array sum  {t_array * 1e3:8.3f} ms&quot;)
 print(f&quot;ratio      {ratio:8.1f}x&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-list sum      9.604 ms
-array sum     0.287 ms
-ratio          33.4x
+list sum      9.614 ms
+array sum     0.331 ms
+ratio          29.1x
 </code></pre>
 <p>The numbers above are from one run on a shared machine. Yours will differ. The <code>assert</code> is the claim: the array sum is at least 5 times faster. The assert fails if the ratio falls below 5 on your machine.</p>
 <p>Memory shows the same effect. The list holds 8-byte pointers and, in addition, one 28-byte object for each integer above 256.</p>
@@ -1389,9 +1389,9 @@ print(f&quot;600 column sums / 600 row sums   {t_col / t_row:5.1f}x&quot;)
 print(f&quot;sum(axis=0) / sum(axis=1)        {t_ax0 / t_ax1:5.1f}x&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-copy of transpose / plain copy     3.0x
-600 column sums / 600 row sums    15.8x
-sum(axis=0) / sum(axis=1)          1.7x
+copy of transpose / plain copy     2.7x
+600 column sums / 600 row sums    21.8x
+sum(axis=0) / sum(axis=1)          1.4x
 </code></pre>
 <p>The ratios above are from one run on a shared machine. The asserts are the claims. The transposed copy is at least 1.3 times slower. The column loop is at least 3 times slower. The two whole-array sums are within a factor of 3 of each other.</p>
 <p>The third line is a result that you can find surprising. The sum along axis 0 walks against the memory order, and it is still not slow. NumPy does not add one column at a time. It adds whole rows into a row of partial sums, which is the order that memory has. The built-in reductions know the layout. Your own Python loop over columns does not.</p>
@@ -1936,9 +1936,9 @@ for name, sec in t.items():
     print(f&quot;{name:9s} {sec * 1e3:8.2f} ms&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-loop        118.63 ms
-at            2.66 ms
-bincount      2.96 ms
+loop        111.35 ms
+at            2.53 ms
+bincount      2.69 ms
 </code></pre>
 <p>The assert proves that the loop is more than 5 times slower than either NumPy version. That is the expected result. The surprise is the second line against the third line.</p>
 <p>Old advice says that <code>np.add.at</code> is very slow and that you must use <code>np.bincount</code>. That advice dates from NumPy 1.x, which this book did not install, so it cannot say whether it was true there. On NumPy 2.5.4 the assert proves that the two are within a factor of 2 of each other on this input.</p>
@@ -2063,7 +2063,7 @@ print(f&quot;sort / partition: {t_sort / t_part:.1f}x&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
 same ten values: True
-sort / partition: 3.0x
+sort / partition: 4.8x
 </code></pre>
 <p>The partition result is not in order, so the code sorts the 10 values at the end. The assert requires a saving of at least 2 times.</p>
 <h4 id="nppartition"><code>np.partition</code></h4>
@@ -2598,9 +2598,9 @@ for name, sec in t.items():
     print(f&quot;{name:15s} {sec * 1e3:9.2f} ms&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-dist_loop          298.99 ms
-dist_broadcast      13.27 ms
-dist_dot             3.61 ms
+dist_loop          286.12 ms
+dist_broadcast       7.91 ms
+dist_dot             0.78 ms
 </code></pre>
 <p>The asserts prove two bounds. The broadcast version is at least 10 times faster than the loop. The dot version is at least 2 times faster than the broadcast version. The dot version never forms the <code>(n, m, d)</code> array, and that is a likely cause of its speed. This book did not test it.</p>
 <h2 id="cost-2-memory">Cost 2: memory</h2>
@@ -3261,7 +3261,7 @@ assert t_expr / t_inpl &gt; 1.1
 print(f&quot;expression / in place: {t_expr / t_inpl:.2f}x&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-expression / in place: 1.47x
+expression / in place: 1.36x
 </code></pre>
 <p>The assert requires a gain of at least 1.1 times. This is a modest gain, and the code is harder to read. Use <code>out=</code> when the profile shows that this line matters, and not before.</p>
 <h2 id="npvectorize-is-not-vectorization"><code>np.vectorize</code> is not vectorization</h2>
@@ -3289,9 +3289,9 @@ print(f&quot;np.vectorize       {t_vec * 1e3:7.1f} ms&quot;)
 print(f&quot;np.where           {t_where * 1e3:7.1f} ms&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-list comprehension   183.9 ms
-np.vectorize         227.1 ms
-np.where              15.1 ms
+list comprehension   164.9 ms
+np.vectorize         198.9 ms
+np.where              16.4 ms
 </code></pre>
 <h4 id="npvectorize"><code>np.vectorize</code></h4>
 <pre><code class="language-text">np.vectorize(pyfunc=&lt;no value&gt;, otypes=None, doc=None, excluded=None, cache=False, signature=None)
@@ -3642,10 +3642,10 @@ for name, sec in t.items():
     print(f&quot;{name:35s} {sec * 1e3:8.0f} ms&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-ma_loop (scaled from 20,000 values)     2673 ms
-ma_cumsum                                 14 ms
-ma_window                                 52 ms
-ma_convolve                               18 ms
+ma_loop (scaled from 20,000 values)     2576 ms
+ma_cumsum                                 11 ms
+ma_window                                 44 ms
+ma_convolve                               17 ms
 </code></pre>
 <p>The loop is measured on 20,000 values and multiplied by 50, so that the run is short. The assert proves that the cumulative-sum version is more than 20 times faster. In the run above, the window version was the slowest of the three. It computes a real mean over a <code>w</code>-wide row for every output, which is a likely cause. This book did not test it. The cumulative-sum version and the convolution were within a factor of 2 of each other.</p>
 <h2 id="the-precision-trap-in-the-fast-version">The precision trap in the fast version</h2>
@@ -3725,7 +3725,7 @@ assert np.isfinite(y[-1]) and elapsed &lt; 10
 print(f&quot;{len(x) / elapsed / 1e6:.1f} million steps a second&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-3.1 million steps a second
+3.5 million steps a second
 </code></pre>
 <p>The loop above ran at the rate that the block printed. The plain ufunc methods do not apply to this loop directly, because each step needs the result of the step before it.</p>
 <p>A rewrite with cumulative sums and powers of <code>1 - alpha</code> exists, and this book did not test its numerical behavior. Two honest options exist outside this book. A filter routine from a signal library applies this recurrence in compiled code. A compiler such as Numba turns the loop into machine code. This book did not measure either, so it makes no claim about their speed.</p>
@@ -4072,9 +4072,9 @@ print(f&quot;inv(A) @ b   {t_inv:.3f} s&quot;)
 print(f&quot;ratio        {t_inv / t_solve:.1f}x&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-solve        0.038 s
-inv(A) @ b   0.133 s
-ratio        3.5x
+solve        0.035 s
+inv(A) @ b   0.125 s
+ratio        3.6x
 </code></pre>
 <p>The inverse was slower and gave a worse answer. The assert requires a ratio above 1.5 with one thread.</p>
 <h2 id="fit-with-lstsq-not-with-the-normal-equations">Fit with <code>lstsq</code>, not with the normal equations</h2>
@@ -5264,10 +5264,10 @@ t_big = min(timeit.repeat(lambda: kmeans(Xb, 3, seed=1), number=1, repeat=3))
 print(f&quot;300,000 points, vectorized: {t_big * 1e3:.0f} ms&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
-900 points: loop 29 ms, vectorized 0.8 ms
-300,000 points, vectorized: 320 ms
+900 points: loop 28 ms, vectorized 0.8 ms
+300,000 points, vectorized: 296 ms
 </code></pre>
-<p>On 900 points the assert requires the vectorized version to be at least 20 times faster. The loop time scales with the number of points. At 300,000 points it is 333 times larger. The run above printed 29 ms for 900 points, so the estimate is about 10 seconds, and the run does not include it.</p>
+<p>On 900 points the assert requires the vectorized version to be at least 20 times faster. The loop time scales with the number of points. At 300,000 points it is 333 times larger. The run above printed 28 ms for 900 points, so the estimate is about 9 seconds, and the run does not include it.</p>
 <p>This is the usual pattern. The check runs on a small input, and the fast version runs on the real one.</p>
 <h2 id="how-it-works">How it works</h2>
 <p>Each iteration of <code>kmeans</code> is a chain of five steps, and every step has a shape. The next block runs one iteration by hand on the data of this chapter, and prints the shape of every value.</p>
@@ -5778,7 +5778,7 @@ wrong. They are fixed in the text. They are listed here because the same habits 
 <tr>
 <td>8</td>
 <td>the guessed timings 160 ms and 4.6 ms</td>
-<td>29 ms and 0.8 ms</td>
+<td>about 29 ms and 0.8 ms (28 to 31 ms in later runs)</td>
 <td>running the block</td>
 </tr>
 <tr>
@@ -5832,7 +5832,7 @@ wrong. They are fixed in the text. They are listed here because the same habits 
 <p>Chapter: Ufuncs and vectorization · module: <a href="../examples/ch06_ufuncs.py"><code>examples/ch06_ufuncs.py</code></a> · solutions: 06</p>
 <p><strong>1. [measure]</strong> For 100,000 values, measure the ratio of the time of <code>ma_window</code> to the time of <code>ma_cumsum</code> at window 10 and at window 1000. Expected: the ratio at window 1000 is above 10, and it is larger than the ratio at window 10. Say why the ratio depends on the window.</p>
 <p><strong>2. [break]</strong> <code>np.vectorize(lambda v: 0 if v &lt; 1 else v)(np.array([0.5, 2.7]))</code> must give <code>[0. 2.7]</code>. Run it and report the result. Then repair it with one argument. Expected: the result <code>[0 2]</code> first, and <code>[0. 2.7]</code> after the repair.</p>
-<p><strong>3. [judge]</strong> A colleague wants to rewrite the exponential moving average of chapter 6 in Numba. What does a good answer weigh? (Consider the 3.1 million steps a second that one run of chapter 6 printed, the size of the real data, the cost of a new dependency, and what a profile must show first.)</p></section><section class="chapter" id="exercises-chapter-7"><h1 id="exercises-chapter-7">Exercises — Chapter 7</h1>
+<p><strong>3. [judge]</strong> A colleague wants to rewrite the exponential moving average of chapter 6 in Numba. What does a good answer weigh? (Consider the 3.5 million steps a second that one run of chapter 6 printed, the size of the real data, the cost of a new dependency, and what a profile must show first.)</p></section><section class="chapter" id="exercises-chapter-7"><h1 id="exercises-chapter-7">Exercises — Chapter 7</h1>
 <p>Chapter: Linear algebra and random numbers · module: <a href="../examples/ch07_linalg_random.py"><code>examples/ch07_linalg_random.py</code></a> · solutions: 07</p>
 <p><strong>1. [measure]</strong> Compute <code>np.linalg.cond</code> of the 10-by-10 Hilbert matrix. Expected: 1.6e13, within a factor of 2.</p>
 <p><strong>2. [break]</strong> <code>np.linalg.solve</code> gave an error of 1.2e-7 for the 8-by-8 Hilbert system in <code>float64</code>. Change only the dtype of the inputs so that the error is larger than 1. Expected: <code>float32</code> gives an error near 7. Explain the result with the condition number and the <code>float32</code> epsilon.</p>
@@ -6062,7 +6062,7 @@ print(f&quot;ratio at w=10: {ratio[10]:.0f}, at w=1000: {ratio[1000]:.0f}&quot;)
 </code></pre>
 <pre><code class="language-text"># output varies
 window time grows with w: True
-ratio at w=10: 2, at w=1000: 27
+ratio at w=10: 3, at w=1000: 26
 </code></pre>
 <p>The window version does <code>w</code> additions for each output value. The cumulative-sum version does two, whatever the size of <code>w</code>. The ratio therefore grows with <code>w</code>. The asserts prove only that the ratio at <code>w = 1000</code> is above 10 and above the ratio at <code>w = 10</code>.</p>
 <h2 id="2-break">2. [break]</h2>
@@ -6083,7 +6083,7 @@ fixed:  [0.  2.7]
 <p>The repair is <code>otypes=[float]</code>. This is a second reason, after speed, to prefer <code>np.where</code> over <code>np.vectorize</code>: <code>np.where(v &lt; 1, 0.0, v)</code> has no output type to guess.</p>
 <h2 id="3-judge">3. [judge]</h2>
 <p><strong>Position.</strong> Not yet. First measure the run time on the real data.</p>
-<p><strong>What a good answer weighs.</strong> The loop ran at 3.1 million steps a second in the run of chapter 6. A series of one million values takes 0.3 seconds. A series of 100,000 takes 0.03 seconds. If the job runs once an hour, this is not a problem. Numba adds a dependency, a compile step at startup and a second place for bugs.</p>
+<p><strong>What a good answer weighs.</strong> The loop ran at 3.5 million steps a second in the run of chapter 6. A series of one million values takes 0.3 seconds. A series of 100,000 takes 0.03 seconds. If the job runs once an hour, this is not a problem. Numba adds a dependency, a compile step at startup and a second place for bugs.</p>
 <p>If a request has 10,000 series of 100,000 values each, the same arithmetic gives 5 minutes. Then the speed matters. The size of the real data and the time budget decide. The chapter measured only the speed of the loop.</p>
 <p><strong>Strongest objection.</strong> A library routine for linear filters applies this recurrence in compiled code, with no new compiler. That is a better first step than Numba. This book did not measure it. A good answer says so and measures it before the choice.</p>
 <p><strong>What overturns the position.</strong> A profile of the real job can show the loop above the time budget. A measurement can then show that the library routine does not meet the budget either. Then Numba is the next step.</p></section><section class="chapter" id="solutions-chapter-7"><h1 id="solutions-chapter-7">Solutions — Chapter 7</h1>
