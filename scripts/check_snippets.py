@@ -11,6 +11,8 @@ Checks, all mechanical and all zero-false-positive by design:
   python    every ```python block -- in chapters, exercises AND solutions -- is executed, exit 0
   output    every ```text block directly below a ```python block must equal the real output
   examples  every examples/*.py module named in a chapter runs and exits 0
+  params    every `#### name` heading in a chapter names a real callable. The ```text block under it is its
+            real signature. Every row of its parameter table is a real parameter, with its real default
 
 A block that times something (timeit, perf_counter) or measures memory (tracemalloc) runs alone, after
 the parallel batch, so that its asserted ratios are not distorted by the other blocks.
@@ -73,12 +75,24 @@ def check_links(files):
 
 
 def check_contracts():
+    """Every chapter has the contract header, `## How it works`, and a `## Reference` that lists every
+    callable that the chapter introduces under a `#### name` heading."""
     chs = sorted((ROOT / "chapters").glob("*.md"))
     for p in chs:
         text = p.read_text(encoding="utf-8")
         miss = [m for m in CONTRACT if m not in text]
+        for heading in ("## How it works", "## Reference"):
+            if not re.search(rf"^{re.escape(heading)}\s*$", text, re.M):
+                miss.append(heading)
         if miss:
             fail(f"{p.relative_to(ROOT)} missing {', '.join(miss)}")
+            continue
+        ref = text[re.search(r"^## Reference\s*$", text, re.M).end():]
+        nxt = re.search(r"^## ", ref, re.M)
+        ref = ref[:nxt.start()] if nxt else ref
+        for h in HEADING.finditer(text):
+            if f"`{h.group(1)}`" not in ref:
+                fail(f"{p.relative_to(ROOT)}: `{h.group(1)}` is not listed in the Reference section")
     return len(chs)
 
 
@@ -151,6 +165,130 @@ def check_python_and_outputs(files):
     return len(blocks), checked
 
 
+HEADING = re.compile(r"^#### `([A-Za-z_][\w.]*)`\s*$", re.M)
+ROW = re.compile(r"^\| ((?:`[^`]+`(?:, )?)+) \| (required|`[^`]*`|—) \|", re.M)
+SIGBLOCK = re.compile(r"\A\s*```text\n(.*?)```", re.S)
+
+
+def _callable_info(chapter: pathlib.Path, name: str):
+    """Return (parameters with defaults, signature text) for a `#### name` heading."""
+    import importlib
+    import inspect
+
+    sys.path.insert(0, str(ROOT))
+    from examples.signatures import parameters, resolve, signature_of
+
+    if name.startswith("np."):
+        obj = resolve(name)
+        return parameters(obj), signature_of(obj, name)
+    mods = sorted((ROOT / "examples").glob(f"ch{chapter.name[:2]}_*.py"))
+    obj = getattr(importlib.import_module(f"examples.{mods[0].stem}"), name)
+    return parameters(obj), f"{name}{inspect.signature(obj)}"
+
+
+def _sections(text: str):
+    """Yield (name, body) for each `#### name` heading, up to the next heading of any level.
+
+    Lines inside a fenced code block are never headings, so a `# comment` in code does not end a section.
+    """
+    lines = text.splitlines(keepends=True)
+    in_fence, offsets, pos = False, [], 0
+    heads = []                                   # (offset, line) of every real heading
+    for line in lines:
+        if line.startswith("```"):
+            in_fence = not in_fence
+        elif not in_fence and re.match(r"#{1,6} ", line):
+            heads.append((pos, line))
+        pos += len(line)
+    for k, (off, line) in enumerate(heads):
+        m = HEADING.match(line.rstrip("\n"))
+        if m:
+            end = heads[k + 1][0] if k + 1 < len(heads) else len(text)
+            yield m.group(1), text[off + len(line):end]
+
+
+def check_parameters():
+    """Each `#### name` heading: the text block is the real signature, and every table row is a real
+    parameter with its real default."""
+    checked = 0
+    for p in sorted((ROOT / "chapters").glob("*.md")):
+        for name, body in _sections(p.read_text(encoding="utf-8")):
+            where = f"{p.relative_to(ROOT)} `{name}`"
+            try:
+                params, sig = _callable_info(p, name)
+            except Exception as e:  # noqa: BLE001
+                fail(f"{where}: cannot find this callable ({type(e).__name__}: {e})")
+                continue
+            m = SIGBLOCK.search(body)
+            if not m:
+                fail(f"{where}: no ```text signature block directly under the heading")
+            elif m.group(1).strip() != sig:
+                fail(f"{where}: signature block differs\n      claimed: {m.group(1).strip()}\n      actual:  {sig}")
+            real = dict(params)
+            seen = []
+            for r in ROW.finditer(body):
+                default = r.group(2)
+                for pname in [n.strip("` ") for n in r.group(1).split(", ")]:
+                    seen.append(pname)
+                    if pname not in real:
+                        fail(f"{where}: `{pname}` is not a parameter")
+                        continue
+                    if default == "—":
+                        continue                      # "see the signature": only the name is checked
+                    want = "required" if real[pname] is None else f"`{real[pname]}`"
+                    if default != want:
+                        fail(f"{where}: default of `{pname}` is {want}, the table says {default}")
+            if not seen:
+                fail(f"{where}: no parameter table")
+            for dup in sorted({n for n in seen if seen.count(n) > 1}):
+                fail(f"{where}: `{dup}` is listed twice")
+            checked += 1
+    return checked
+
+
+def fill_signatures(files):
+    """Write the real signature into every signature block that holds only `# fill`."""
+    for p in files:
+        if p.parent.name != "chapters":
+            continue
+        text = p.read_text(encoding="utf-8")
+        out, pos = [], 0
+        for h in HEADING.finditer(text):
+            _, sig = _callable_info(p, h.group(1))
+            m = re.compile(r"(\s*```text\n)# fill\n```").match(text, h.end())
+            if m:
+                out.append(text[pos:h.end()])
+                out.append(m.group(1) + sig + "\n```")
+                pos = m.end()
+        out.append(text[pos:])
+        new = "".join(out)
+        if new != text:
+            p.write_text(new, encoding="utf-8")
+            print(f"signatures filled in {p.relative_to(ROOT)}")
+
+
+NP_NAME = re.compile(r"`(np\.[A-Za-z_][\w.]*)")
+
+
+def check_identifiers():
+    """Every `np.name` that the prose or a table mentions must exist in the installed NumPy."""
+    sys.path.insert(0, str(ROOT))
+    from examples.signatures import resolve
+
+    seen = set()
+    for p in md_files():
+        for name in NP_NAME.findall(p.read_text(encoding="utf-8")):
+            name = name.rstrip(".")
+            if name in seen or name in ("np.newaxis",):
+                continue
+            seen.add(name)
+            try:
+                resolve(name)
+            except AttributeError:
+                fail(f"{p.relative_to(ROOT)}: `{name}` does not exist in this NumPy")
+    return len(seen)
+
+
 def check_examples():
     mods = sorted(set(re.findall(r"python -m (examples\.[A-Za-z0-9_]+)",
                                  "".join(p.read_text(encoding="utf-8") for p in (ROOT / "chapters").glob("*.md")))))
@@ -199,15 +337,19 @@ def main():
     if only:
         files = [f for f in files if f.resolve() in only]
     if "--fill" in sys.argv or "--refill" in sys.argv:
+        fill_signatures(files)
         fill(files, refill="--refill" in sys.argv)
         return 0
     links, chs = check_links(files), check_contracts()
     (blocks, outs), mods = check_python_and_outputs(files), check_examples()
+    params, idents = check_parameters(), check_identifiers()
     print(f"[ OK ] {links} relative links resolve")
     print(f"[ OK ] {chs} chapters carry their contract")
     print(f"[ OK ] {blocks} python blocks run")
     print(f"[ OK ] {outs} claimed outputs match what the code prints")
     print(f"[ OK ] {mods} example modules run")
+    print(f"[ OK ] {params} callables have their real signature and real defaults")
+    print(f"[ OK ] {idents} distinct np.* names in the text exist")
     if failures:
         print(f"\n{len(failures)} problem(s).")
         return 1

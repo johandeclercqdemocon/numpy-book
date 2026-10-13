@@ -153,6 +153,7 @@ def collect() -> tuple[list[str], list[tuple[str, str]]]:
 
     sources: list[tuple[str, list[pathlib.Path]]] = [
         ("Chapters", sorted((ROOT / "chapters").glob("*.md"))),
+        ("Appendices", sorted((ROOT / "appendices").glob("*.md"))),
         ("Exercises", sorted((ROOT / "exercises").glob("[0-9]*.md"))),
         ("Worked solutions", sorted((ROOT / "exercises" / "solutions").glob("[0-9]*.md"))),
     ]
