@@ -265,9 +265,9 @@ print(f"sum(axis=0) / sum(axis=1)        {t_ax0 / t_ax1:5.1f}x")
 
 ```text
 # output varies
-copy of transpose / plain copy     3.0x
-600 column sums / 600 row sums    15.8x
-sum(axis=0) / sum(axis=1)          1.7x
+copy of transpose / plain copy     2.7x
+600 column sums / 600 row sums    21.8x
+sum(axis=0) / sum(axis=1)          1.4x
 ```
 
 The ratios above are from one run on a shared machine. The asserts are the claims. The transposed copy is at least 1.3 times slower. The column loop is at least 3 times slower. The two whole-array sums are within a factor of 3 of each other.

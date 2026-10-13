@@ -289,9 +289,9 @@ for name, sec in t.items():
 
 ```text
 # output varies
-dist_loop          298.99 ms
-dist_broadcast      13.27 ms
-dist_dot             3.61 ms
+dist_loop          286.12 ms
+dist_broadcast       7.91 ms
+dist_dot             0.78 ms
 ```
 
 The asserts prove two bounds. The broadcast version is at least 10 times faster than the loop. The dot version is at least 2 times faster than the broadcast version. The dot version never forms the `(n, m, d)` array, and that is a likely cause of its speed. This book did not test it.

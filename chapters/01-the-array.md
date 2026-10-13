@@ -291,9 +291,9 @@ print(f"ratio      {ratio:8.1f}x")
 
 ```text
 # output varies
-list sum      9.604 ms
-array sum     0.287 ms
-ratio          33.4x
+list sum      9.614 ms
+array sum     0.331 ms
+ratio          29.1x
 ```
 
 The numbers above are from one run on a shared machine. Yours will differ. The `assert` is the claim: the array sum is at least 5 times faster. The assert fails if the ratio falls below 5 on your machine.

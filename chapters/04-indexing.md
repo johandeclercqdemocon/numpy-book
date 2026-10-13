@@ -263,9 +263,9 @@ for name, sec in t.items():
 
 ```text
 # output varies
-loop        118.63 ms
-at            2.66 ms
-bincount      2.96 ms
+loop        111.35 ms
+at            2.53 ms
+bincount      2.69 ms
 ```
 
 The assert proves that the loop is more than 5 times slower than either NumPy version. That is the expected result. The surprise is the second line against the third line.
@@ -339,7 +339,7 @@ print(f"sort / partition: {t_sort / t_part:.1f}x")
 ```text
 # output varies
 same ten values: True
-sort / partition: 3.0x
+sort / partition: 4.8x
 ```
 
 The partition result is not in order, so the code sorts the 10 values at the end. The assert requires a saving of at least 2 times.

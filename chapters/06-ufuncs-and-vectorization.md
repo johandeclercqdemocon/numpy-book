@@ -210,7 +210,7 @@ print(f"expression / in place: {t_expr / t_inpl:.2f}x")
 
 ```text
 # output varies
-expression / in place: 1.47x
+expression / in place: 1.36x
 ```
 
 The assert requires a gain of at least 1.1 times. This is a modest gain, and the code is harder to read. Use `out=` when the profile shows that this line matters, and not before.
@@ -245,9 +245,9 @@ print(f"np.where           {t_where * 1e3:7.1f} ms")
 
 ```text
 # output varies
-list comprehension   183.9 ms
-np.vectorize         227.1 ms
-np.where              15.1 ms
+list comprehension   164.9 ms
+np.vectorize         198.9 ms
+np.where              16.4 ms
 ```
 
 #### `np.vectorize`
@@ -457,10 +457,10 @@ for name, sec in t.items():
 
 ```text
 # output varies
-ma_loop (scaled from 20,000 values)     2673 ms
-ma_cumsum                                 14 ms
-ma_window                                 52 ms
-ma_convolve                               18 ms
+ma_loop (scaled from 20,000 values)     2576 ms
+ma_cumsum                                 11 ms
+ma_window                                 44 ms
+ma_convolve                               17 ms
 ```
 
 The loop is measured on 20,000 values and multiplied by 50, so that the run is short. The assert proves that the cumulative-sum version is more than 20 times faster. In the run above, the window version was the slowest of the three. It computes a real mean over a `w`-wide row for every output, which is a likely cause. This book did not test it. The cumulative-sum version and the convolution were within a factor of 2 of each other.
@@ -560,7 +560,7 @@ print(f"{len(x) / elapsed / 1e6:.1f} million steps a second")
 
 ```text
 # output varies
-3.1 million steps a second
+3.5 million steps a second
 ```
 
 The loop above ran at the rate that the block printed. The plain ufunc methods do not apply to this loop directly, because each step needs the result of the step before it.

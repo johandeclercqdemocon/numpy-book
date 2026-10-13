@@ -148,9 +148,9 @@ print(f"ratio        {t_inv / t_solve:.1f}x")
 
 ```text
 # output varies
-solve        0.038 s
-inv(A) @ b   0.133 s
-ratio        3.5x
+solve        0.035 s
+inv(A) @ b   0.125 s
+ratio        3.6x
 ```
 
 The inverse was slower and gave a worse answer. The assert requires a ratio above 1.5 with one thread.

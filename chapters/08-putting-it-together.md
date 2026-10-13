@@ -337,11 +337,11 @@ print(f"300,000 points, vectorized: {t_big * 1e3:.0f} ms")
 
 ```text
 # output varies
-900 points: loop 29 ms, vectorized 0.8 ms
-300,000 points, vectorized: 320 ms
+900 points: loop 28 ms, vectorized 0.8 ms
+300,000 points, vectorized: 296 ms
 ```
 
-On 900 points the assert requires the vectorized version to be at least 20 times faster. The loop time scales with the number of points. At 300,000 points it is 333 times larger. The run above printed 29 ms for 900 points, so the estimate is about 10 seconds, and the run does not include it.
+On 900 points the assert requires the vectorized version to be at least 20 times faster. The loop time scales with the number of points. At 300,000 points it is 333 times larger. The run above printed 28 ms for 900 points, so the estimate is about 9 seconds, and the run does not include it.
 
 This is the usual pattern. The check runs on a small input, and the fast version runs on the real one.
 

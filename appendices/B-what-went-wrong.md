@@ -25,7 +25,7 @@ wrong. They are fixed in the text. They are listed here because the same habits 
 | [7](../chapters/07-linear-algebra-and-random.md) | `inv` has a residual 1e8 times larger at `n = 8` | 6e7 times | the printed output |
 | [7](../chapters/07-linear-algebra-and-random.md) | `solve` takes 0.18 s and `inv` 0.48 s for 2000 | the ratio changes with the load of the machine and with the number of threads, down to 0.88 | the number audit, and a run on a busy machine |
 | [8](../chapters/08-putting-it-together.md) | the first k-means run finds the three blobs | purity 0.67: a local minimum, on seed 0 | the assert of the first draft failed |
-| [8](../chapters/08-putting-it-together.md) | the guessed timings 160 ms and 4.6 ms | 29 ms and 0.8 ms | running the block |
+| [8](../chapters/08-putting-it-together.md) | the guessed timings 160 ms and 4.6 ms | about 29 ms and 0.8 ms (28 to 31 ms in later runs) | running the block |
 | all | timings typed into `# output varies` blocks | they came from other scripts. They are now printed by the block itself | `scripts/refresh_varies.py` |
 | all | a timing assert passed when blocks ran in parallel and failed under load | the checker now runs timed blocks alone | a failed run, then the checker rule |
 
