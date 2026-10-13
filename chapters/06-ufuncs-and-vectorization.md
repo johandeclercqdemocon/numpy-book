@@ -8,7 +8,7 @@
 >
 > **Run this first** — `uv run python -m examples.ch06_ufuncs`, which is [`examples/ch06_ufuncs.py`](../examples/ch06_ufuncs.py).
 
-A ufunc, short for universal function, is the unit of speed in NumPy. `np.add`, `np.multiply`, `np.sqrt`, `np.maximum` and about 90 others are ufuncs. The operators `+` and `*` call them. A ufunc takes arrays, loops over the elements in compiled code, and returns an array. It does the Python-level work once for the whole array, and not once per element.
+A ufunc, short for universal function, is the unit of speed in NumPy. `np.add`, `np.multiply`, `np.sqrt`, `np.maximum` and 102 others are ufuncs. The section [How it works](#how-it-works) counts them. The operators `+` and `*` call them. A ufunc takes arrays, loops over the elements in compiled code, and returns an array. It does the Python-level work once for the whole array, and not once per element.
 
 This chapter shows three methods that make a ufunc more than an element-wise function. It shows one wrong way to get the speed. It ends with a moving average that you build four times.
 
@@ -37,9 +37,67 @@ outer      :
  [12  4 16]]
 ```
 
+#### `np.add`
+
+```text
+np.add(x1, x2, /, out=None, *, where=True, casting='same_kind', order='K', dtype=None, subok=True, signature=None)
+```
+
+The ufunc adds two arrays element by element, with the broadcast rule of chapter 5. The operator `+` calls it.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x1`, `x2` | required | the two inputs. They broadcast against each other | a shape that does not broadcast raises `ValueError` |
+| `out` | `None` | an array to write the result into | an `out` of a type that cannot hold the result raises `UFuncTypeError`: `float64` into `int64` is refused |
+| `where` | `True` | a boolean array. Elements where it is `False` are skipped | without `out`, the skipped elements have undefined values |
+| `casting` | `'same_kind'` | which casts the ufunc may do to match types | `'unsafe'` allows `float64` into `int64`, and it truncates |
+| `dtype` | `None` | the type of the computation and of the result | `dtype=np.int64` on two `int8` values 127 and 1 gives 128 and not -128 |
+
+#### `np.add.reduce`
+
+```text
+np.add.reduce(array, /, axis=0, dtype=None, out=None, **kwargs)
+```
+
+The method folds the array along one axis to one value for each position of the other axes.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `array` | required | the array to fold | an empty array gives the identity of the ufunc: 0 for `np.add` |
+| `axis` | `0` | the axis to fold along. With `None`, all axes | the default is 0, and `np.sum` has `None`. On a 2-D array the two give `[3 5 7]` and `15` |
+| `dtype` | `None` | the type of the running total | — |
+| `out` | `None` | an array to write the result into | — |
+
+#### `np.add.accumulate`
+
+```text
+np.add.accumulate(array, /, axis=0, dtype=None, out=None)
+```
+
+The method returns every partial result of the fold, in order.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `array` | required | the array to scan | — |
+| `axis` | `0` | the axis to scan along | the default is 0, and `np.cumsum` flattens with `None` |
+| `dtype` | `None` | the type of the running total and of the result | a `float32` input keeps a `float32` total, and the drift of chapter 2 appears |
+| `out` | `None` | an array to write the result into | — |
+
+#### `np.add.outer`
+
+```text
+np.add.outer(A, B, /, **kwargs)
+```
+
+The method applies the ufunc to every pair of one element of `A` and one element of `B`. The result has the shape of `A` followed by the shape of `B`.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A`, `B` | required | the two inputs | the result has `A.ndim + B.ndim` axes, and a large pair makes a large array |
+
 The call `np.add.reduce(x)` is `x.sum()`. It folds the array to one value. The call `np.add.accumulate(x)` is `np.cumsum(x)`. It keeps every partial result. The call `np.maximum.accumulate(x)` gives the running maximum, which has no special name in NumPy. The call `np.multiply.outer` gives every product of a pair, which is the broadcast of chapter 5 written as a method.
 
-The methods let you build many functions from the 90 ufuncs. A running minimum, a running product and a running logical `or` are one call each.
+The methods let you build many functions from the 106 ufuncs. A running minimum, a running product and a running logical `or` are one call each.
 
 ## axis, keepdims, out and where
 
@@ -70,7 +128,7 @@ sqrt with where: [ 1. nan  2.]
 
 The last line shows the contract of `where`. The element that the condition skipped keeps its old value in `out`. If you do not pass `out`, the values of the skipped elements are undefined, so always pass it.
 
-One more behavior has a large effect on real data. A `nan` spreads through a sum.
+One more behavior matters for data with missing values. A `nan` spreads through a sum.
 
 ```python
 import numpy as np
@@ -86,6 +144,20 @@ sum   : nan
 nansum: 3.0
 mean  : nan nanmean: 1.5
 ```
+
+#### `np.nansum`
+
+```text
+np.nansum(a, axis=None, dtype=None, out=None, keepdims=<no value>, initial=<no value>, where=<no value>)
+```
+
+The function adds the values of an array and treats `nan` as 0. It takes the same arguments as `np.sum`.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array | an array of only `nan` gives `0.0`, which looks like a real sum |
+| `axis` | `None` | the axis to add along | — |
+| `dtype` | `None` | the type of the running total | — |
 
 The `nan` functions skip the missing values. Use them with intent. A silent `nansum` on a column that is mostly `nan` gives a number, and the number is a sum of very few values.
 
@@ -124,10 +196,10 @@ print(f"expression / in place: {t_expr / t_inpl:.2f}x")
 
 ```text
 # output varies
-expression / in place: 1.41x
+expression / in place: 1.47x
 ```
 
-The gain on the build machine is 1.4 times, and the assert requires 1.1. This is a modest gain, and the code is harder to read. Use `out=` when the profile shows that this line matters, and not before.
+The assert requires a gain of at least 1.1 times. This is a modest gain, and the code is harder to read. Use `out=` when the profile shows that this line matters, and not before.
 
 ## `np.vectorize` is not vectorization
 
@@ -159,12 +231,26 @@ print(f"np.where           {t_where * 1e3:7.1f} ms")
 
 ```text
 # output varies
-list comprehension   166.1 ms
-np.vectorize         203.4 ms
-np.where             15.1 ms
+list comprehension   183.9 ms
+np.vectorize         227.1 ms
+np.where              15.1 ms
 ```
 
-The `np.vectorize` call is slower than the list comprehension that it replaces, on the build machine. The real vectorized form, with `np.where`, is 11 to 13 times faster than both. Use `np.vectorize` to make a Python function accept arrays in a place where speed does not matter. Do not use it to go faster.
+#### `np.vectorize`
+
+```text
+np.vectorize(pyfunc=<no value>, otypes=None, doc=None, excluded=None, cache=False, signature=None)
+```
+
+The class wraps a Python function so that it accepts arrays. It calls the function once for each element.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `pyfunc` | `<no value>` | the Python function to wrap | it is called in a Python loop, so the speed is the speed of a loop |
+| `otypes` | `None` | the output types. Without it, NumPy takes the type of the first result | `0 if v < 1 else v` on `[0.5, 2.7]` gives `[0 2]`, because the first result is an integer |
+| `signature` | `None` | a generalized signature such as `(n),(n)->()` for a function of arrays | a wrong signature raises `ValueError` at the call |
+
+In the run above, the `np.vectorize` call was slower than the list comprehension that it replaces. The assert proves only that it is not more than 2 times faster. The assert also proves that the real vectorized form, with `np.where`, is more than 5 times faster than the loop. Use `np.vectorize` to make a Python function accept arrays in a place where speed does not matter. Do not use it to go faster.
 
 ## The function you build: a moving average
 
@@ -175,23 +261,27 @@ import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 
-def ma_loop(x, w):
+def ma_loop(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average of window w, from the definition."""
     out = np.empty(len(x) - w + 1)
     for i in range(len(out)):
         out[i] = x[i:i + w].mean()
     return out
 
 
-def ma_cumsum(x, w):
+def ma_cumsum(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average from a cumulative sum."""
     c = np.concatenate([[0.0], np.cumsum(x)])
     return (c[w:] - c[:-w]) / w
 
 
-def ma_window(x, w):
+def ma_window(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average from a sliding-window view."""
     return sliding_window_view(x, w).mean(axis=-1)
 
 
-def ma_convolve(x, w):
+def ma_convolve(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average as a convolution with a flat kernel."""
     return np.convolve(x, np.ones(w) / w, mode="valid")
 
 
@@ -209,6 +299,101 @@ ma_convolve max difference from the loop: 3.3e-16
 
 All three agree with the loop to within rounding. The version `ma_cumsum` is based on one fact: the sum of the window that ends at `i` is the cumulative sum at `i` minus the cumulative sum `w` steps earlier. This is two passes over the data, whatever the size of `w`. The version `ma_window` uses `sliding_window_view`, which makes an `(n - w + 1, w)` view without copying, as chapter 3 explained, and then takes the mean of each row. The version `ma_convolve` treats the average as a convolution with a flat kernel.
 
+#### `np.lib.stride_tricks.sliding_window_view`
+
+```text
+np.lib.stride_tricks.sliding_window_view(x, window_shape, axis=None, *, subok=False, writeable=False)
+```
+
+The function returns a read-only view in which each row is one window of the input. It copies nothing.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | the array | — |
+| `window_shape` | required | the length of the window, or a tuple of lengths | a window longer than the input raises `ValueError` |
+| `axis` | `None` | the axis or axes to slide along | with `None`, the window slides over all axes, and `window_shape` must have one length for each |
+| `writeable` | `False` | with `True`, writes are allowed | a write changes every window that holds that position |
+
+#### `np.convolve`
+
+```text
+np.convolve(a, v, mode='full')
+```
+
+The function returns the discrete convolution of two 1-D arrays. With a flat kernel, it is a moving sum.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a`, `v` | required | the signal and the kernel | when `v` is longer than `a`, NumPy swaps them, and `ma_convolve` returns 3 values for 3 inputs and `w = 5` |
+| `mode` | `'full'` | `'full'` returns `n + w - 1` values. `'valid'` returns `n - w + 1` values, only where the kernel fits | `'full'` has partial windows at both ends, and they are not averages of `w` values |
+
+The next five functions have the same two parameters. Each section below gives what goes wrong for that version.
+
+#### `ma_loop`
+
+```text
+ma_loop(x: numpy.ndarray, w: int) -> numpy.ndarray
+```
+
+The function computes the moving average from the definition, one window at a time.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | the slowest version in the timing block, scaled from 20,000 values |
+| `w` | required | the window length, a positive integer | a `w` larger than the input raises `ValueError` |
+
+#### `ma_cumsum`
+
+```text
+ma_cumsum(x: numpy.ndarray, w: int) -> numpy.ndarray
+```
+
+The function computes the moving average from a cumulative sum.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | `float32` values from 10,000 to 10,100 give an error of 207 |
+| `w` | required | the window length, a positive integer | a `w` larger than the input gives an empty array and no error |
+
+#### `ma_cumsum_centered`
+
+```text
+ma_cumsum_centered(x: numpy.ndarray, w: int) -> numpy.ndarray
+```
+
+The function subtracts the mean first, so the cumulative sum stays small, and adds it back after.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | the error is 0 on seed 2 and 4.7e-4 on seed 3, for `float32` values from 10,000 to 10,100 |
+| `w` | required | the window length, a positive integer | the same empty result as `ma_cumsum` for a `w` larger than the input |
+
+#### `ma_window`
+
+```text
+ma_window(x: numpy.ndarray, w: int) -> numpy.ndarray
+```
+
+The function averages each row of a sliding-window view.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | the slowest of the three fast versions in the timing block |
+| `w` | required | the window length, a positive integer | a `w` larger than the input raises `ValueError` |
+
+#### `ma_convolve`
+
+```text
+ma_convolve(x: numpy.ndarray, w: int) -> numpy.ndarray
+```
+
+The function averages with a convolution and a flat kernel.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | — |
+| `w` | required | the window length, a positive integer | a `w` larger than the input returns `len(x)` values that are not moving averages |
+
 Time them on one million values with `w = 50`.
 
 ```python
@@ -218,23 +403,27 @@ import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 
-def ma_loop(x, w):
+def ma_loop(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average of window w, from the definition."""
     out = np.empty(len(x) - w + 1)
     for i in range(len(out)):
         out[i] = x[i:i + w].mean()
     return out
 
 
-def ma_cumsum(x, w):
+def ma_cumsum(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average from a cumulative sum."""
     c = np.concatenate([[0.0], np.cumsum(x)])
     return (c[w:] - c[:-w]) / w
 
 
-def ma_window(x, w):
+def ma_window(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average from a sliding-window view."""
     return sliding_window_view(x, w).mean(axis=-1)
 
 
-def ma_convolve(x, w):
+def ma_convolve(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average as a convolution with a flat kernel."""
     return np.convolve(x, np.ones(w) / w, mode="valid")
 
 
@@ -250,13 +439,13 @@ for name, sec in t.items():
 
 ```text
 # output varies
-ma_loop (scaled from 20,000 values)     2747 ms
-ma_cumsum                                 16 ms
-ma_window                                 44 ms
-ma_convolve                               17 ms
+ma_loop (scaled from 20,000 values)     2673 ms
+ma_cumsum                                 14 ms
+ma_window                                 52 ms
+ma_convolve                               18 ms
 ```
 
-The loop is measured on 20,000 values and multiplied by 50, so that the run is short. The vectorized versions are 60 to 170 times faster. The window version is the slowest of the three because it computes a real mean over a `w`-wide row for every output. The cumulative-sum version and the convolution are about the same speed.
+The loop is measured on 20,000 values and multiplied by 50, so that the run is short. The assert proves that the cumulative-sum version is more than 20 times faster. In the run above, the window version was the slowest of the three. It computes a real mean over a `w`-wide row for every output, which is a likely cause. This book did not test it. The cumulative-sum version and the convolution were within a factor of 2 of each other.
 
 ## The precision trap in the fast version
 
@@ -267,17 +456,19 @@ import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 
-def ma_cumsum(x, w):
+def ma_cumsum(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average from a cumulative sum."""
     c = np.concatenate([[0.0], np.cumsum(x)])
     return (c[w:] - c[:-w]) / w
 
 
-def ma_cumsum_centered(x, w):
+def ma_cumsum_centered(x: np.ndarray, w: int) -> np.ndarray:
     m = x.mean()
     return ma_cumsum(x - m, w) + m
 
 
-def ma_window(x, w):
+def ma_window(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average from a sliding-window view."""
     return sliding_window_view(x, w).mean(axis=-1)
 
 
@@ -288,6 +479,8 @@ for seed in (2, 3):
     truth = ma_window(x32.astype(np.float64), 50)
     for f in (ma_cumsum, ma_cumsum_centered, ma_window):
         print(f"seed {seed} {f.__name__:20s} max error {np.abs(f(x32, 50) - truth).max():.3g}")
+    centered_total = np.abs(np.cumsum(x32 - x32.mean())).max()
+    print(f"seed {seed} largest centered running total {float(centered_total):.0f} (2**14 is 16384), gap at 10050: {float(np.spacing(np.float32(10050))):.6f}")
     x64 = x32.astype(np.float64)
     print(f"seed {seed} {'ma_cumsum in float64':20s} max error {np.abs(ma_cumsum(x64, 50) - truth).max():.3g}")
 ```
@@ -297,22 +490,28 @@ float32 data, values from 10000 to 10100, one million values
 seed 2 ma_cumsum            max error 207
 seed 2 ma_cumsum_centered   max error 0
 seed 2 ma_window            max error 0.00197
+seed 2 largest centered running total 13611 (2**14 is 16384), gap at 10050: 0.000977
 seed 2 ma_cumsum in float64 max error 0
 seed 3 ma_cumsum            max error 209
 seed 3 ma_cumsum_centered   max error 0.000469
 seed 3 ma_window            max error 0.00186
+seed 3 largest centered running total 30083 (2**14 is 16384), gap at 10050: 0.000977
 seed 3 ma_cumsum in float64 max error 0
 ```
 
 The plain cumulative-sum version has an error of about 200 on values near 10,000. That is 2 percent of the values. The window version has an error of 0.002, which is about twice the spacing of `float32` at that size.
 
-The centered version subtracts the mean first, so the cumulative sum stays small. On seed 2 its error is exactly 0. This is a property of that data and not of the method. The centered total never leaves the range where `float32` can hold it exactly, because every value is a multiple of 2⁻¹⁰.
+The centered version subtracts the mean first, so the cumulative sum stays small. On seed 2 its error is exactly 0. This is a property of that data and not of the method.
+
+Every value is a multiple of 2⁻¹⁰, which is the gap at 10,050. The `float32` format holds a multiple of 2⁻¹⁰ exactly up to 2¹⁴, which is 16,384. The block prints the largest centered total: 13,611 on seed 2, below that limit, and 30,083 on seed 3, above it.
 
 On seed 3 the error is 4.7e-4, which is smaller than the window version.
 
 Read the two seeds together. Centering gives a good answer in both cases, and the exact zero on one seed is luck.
 
-If you do not know the range of your data, use the window version or use `float64` for the cumulative sum. The last line of each seed shows the `float64` result. Its error is 0 on both seeds, for the same reason as the exact zero above. The values sit on a grid of 2⁻¹⁰, and `float64` holds their sums exactly.
+If you do not know the range of your data, use the window version or use `float64` for the cumulative sum.
+
+The last line of each seed shows the `float64` result. Its error is 0 on both seeds, for the same reason as the exact zero above. The values sit on a grid of 2⁻¹⁰, and `float64` holds their sums exactly.
 
 ## When no vectorized form exists
 
@@ -343,10 +542,100 @@ print(f"{len(x) / elapsed / 1e6:.1f} million steps a second")
 
 ```text
 # output varies
-3.6 million steps a second
+3.1 million steps a second
 ```
 
-The loop runs at 3.6 million steps a second on the build machine. There is no `np.add.accumulate` form of this, because the weight of each step depends on the running value. Two honest options exist outside this book. A filter routine from a signal library applies this recurrence in compiled code. A compiler such as Numba turns the loop into machine code. This book did not measure either, so it makes no claim about their speed.
+The loop above ran at the rate that the block printed. The plain ufunc methods do not apply to this loop directly, because each step needs the result of the step before it.
+
+A rewrite with cumulative sums and powers of `1 - alpha` exists, and this book did not test its numerical behavior. Two honest options exist outside this book. A filter routine from a signal library applies this recurrence in compiled code. A compiler such as Numba turns the loop into machine code. This book did not measure either, so it makes no claim about their speed.
+
+## How it works
+
+A ufunc is a table of compiled loops, one for each combination of input types. When you call it, NumPy finds the first loop in the table to which both inputs can be cast safely. It then runs that loop over the whole array. (The NumPy documentation describes this rule. This book did not measure the buffers that the cast uses.) The type letters are the names of the dtype: `b` is `int8`, `f` is `float32`, `d` is `float64`.
+
+```python
+import numpy as np
+
+ufuncs = [name for name in dir(np) if isinstance(getattr(np, name), np.ufunc)]
+print("ufuncs in the numpy namespace:", len(ufuncs))
+print("compiled loops of np.add:     ", len(np.add.types))
+print("first six loops:              ", np.add.types[:6])
+for a, b in [(np.int8, np.int8), (np.int8, np.float32), (np.int64, np.uint64)]:
+    print(f"{a.__name__:7s} + {b.__name__:8s} runs in", np.result_type(a, b))
+```
+
+```text
+ufuncs in the numpy namespace: 106
+compiled loops of np.add:      22
+first six loops:               ['??->?', 'bb->b', 'BB->B', 'hh->h', 'HH->H', 'ii->i']
+int8    + int8     runs in int8
+int8    + float32  runs in float32
+int64   + uint64   runs in float64
+```
+
+The three results at the end are the promotion rules of chapter 2, read from the same table. The pair `int64` and `uint64` has no integer loop that holds both, so it runs as `float64`.
+
+The two methods are also simple. `reduce` is a fold, and `accumulate` is a scan. The next block writes both with plain Python and compares them with NumPy.
+
+```python
+import functools
+import itertools
+import operator
+
+import numpy as np
+
+x = np.random.default_rng(0).random(1000)
+
+fold = functools.reduce(operator.add, x.tolist())
+scan = list(itertools.accumulate(x.tolist()))
+
+print("reduce equals the fold:        ", np.isclose(np.add.reduce(x), fold))
+print("reduce equals it exactly:      ", np.add.reduce(x) == fold)
+print("difference:                    ", abs(np.add.reduce(x) - fold))
+print("accumulate equals the scan:    ", np.allclose(np.add.accumulate(x), scan))
+print("identity of add and multiply:  ", np.add.identity, np.multiply.identity)
+print("reduce of an empty array, add: ", np.add.reduce([]))
+try:
+    np.maximum.reduce([])
+except ValueError as e:
+    print("reduce of an empty array, max: ValueError -", e)
+```
+
+```text
+reduce equals the fold:         True
+reduce equals it exactly:       False
+difference:                     1.1368683772161603e-13
+accumulate equals the scan:     True
+identity of add and multiply:   0 1
+reduce of an empty array, add:  0.0
+reduce of an empty array, max: ValueError - zero-size array to reduction operation maximum which has no identity
+```
+
+The fold and the NumPy result agree to rounding but not exactly. `np.add.reduce` adds in pairs, as chapter 2 explained, and the Python fold adds one value at a time. The difference is of the order of 1e-13 for 1000 values.
+
+The identity is the value of a fold over no elements: 0 for addition and 1 for multiplication. The ufunc `np.maximum` has none, so an empty reduction is an error and not a wrong number.
+
+**The invariant.** For an associative ufunc, `reduce` gives the fold of the operator. The method `accumulate` gives every partial result. Both hold up to the order of the additions.
+
+**The failure.** A float fold depends on the order of the additions. A Python loop and a NumPy call give different last digits. A running total in a narrow type drifts, as in chapter 2. Compare results with `np.isclose` and not with `==`.
+
+## Reference
+
+| Callable | Introduced in | Contract |
+|---|---|---|
+| `np.add` | Three methods on every binary ufunc | element-wise sum, with the broadcast rule |
+| `np.add.reduce` | Three methods on every binary ufunc | fold along an axis |
+| `np.add.accumulate` | Three methods on every binary ufunc | every partial result of the fold |
+| `np.add.outer` | Three methods on every binary ufunc | the operator on every pair |
+| `np.nansum` | axis, keepdims, out and where | sum that skips `nan` |
+| `np.vectorize` | `np.vectorize` is not vectorization | a Python function applied to each element |
+| `np.lib.stride_tricks.sliding_window_view` | The function you build: a moving average | read-only view of all windows |
+| `np.convolve` | The function you build: a moving average | discrete convolution of two 1-D arrays |
+| `ma_loop` | The function you build: a moving average | moving average from the definition |
+| `ma_cumsum` | The function you build: a moving average | moving average from a cumulative sum |
+| `ma_cumsum_centered` | The precision trap in the fast version | the cumulative-sum version after centering |
+| `ma_window` | The function you build: a moving average | moving average from a window view |
+| `ma_convolve` | The function you build: a moving average | moving average from a convolution |
 
 ## What you have now
 

@@ -4,20 +4,23 @@ import timeit
 import numpy as np
 
 
-def group_sum_loop(keys, values, k):
+def group_sum_loop(keys: np.ndarray, values: np.ndarray, k: int) -> np.ndarray:
+    """Add up `values` for each key in 0..k-1 with a Python loop."""
     out = [0.0] * k
     for key, v in zip(keys.tolist(), values.tolist()):
         out[key] += v
     return np.array(out)
 
 
-def group_sum_at(keys, values, k):
+def group_sum_at(keys: np.ndarray, values: np.ndarray, k: int) -> np.ndarray:
+    """Add up `values` for each key in 0..k-1 with np.add.at."""
     out = np.zeros(k)
     np.add.at(out, keys, values)
     return out
 
 
-def group_sum_bincount(keys, values, k):
+def group_sum_bincount(keys: np.ndarray, values: np.ndarray, k: int) -> np.ndarray:
+    """Add up `values` for each key in 0..k-1 with np.bincount."""
     return np.bincount(keys, weights=values, minlength=k)
 
 

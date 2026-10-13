@@ -5,26 +5,34 @@ import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 
-def ma_loop(x, w):
+def ma_loop(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average of window w, from the definition."""
     out = np.empty(len(x) - w + 1)
     for i in range(len(out)):
         out[i] = x[i:i + w].mean()
     return out
 
 
-def ma_cumsum(x, w):
+def ma_cumsum(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average from a cumulative sum."""
     c = np.concatenate([[0.0], np.cumsum(x)])
     return (c[w:] - c[:-w]) / w
 
 
-def ma_cumsum_centered(x, w):
+def ma_cumsum_centered(x: np.ndarray, w: int) -> np.ndarray:
     """The cumsum version after removing the mean, so the running total stays small."""
     m = x.mean()
     return ma_cumsum(x - m, w) + m
 
 
-def ma_window(x, w):
+def ma_window(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average from a sliding-window view."""
     return sliding_window_view(x, w).mean(axis=-1)
+
+
+def ma_convolve(x: np.ndarray, w: int) -> np.ndarray:
+    """Moving average as a convolution with a flat kernel."""
+    return np.convolve(x, np.ones(w) / w, mode="valid")
 
 
 def best(f, repeat=3):
@@ -36,7 +44,7 @@ def main() -> None:
     s = rng.random(1_000_000)
     w = 50
     ref = ma_loop(s[:20000], w)
-    for f in (ma_cumsum, ma_cumsum_centered, ma_window):
+    for f in (ma_cumsum, ma_cumsum_centered, ma_window, ma_convolve):
         assert np.allclose(f(s[:20000], w), ref)
     x32 = (s * 100 + 1e4).astype(np.float32)
     truth = ma_window(x32.astype(np.float64), w)

@@ -5,7 +5,8 @@ import tracemalloc
 import numpy as np
 
 
-def dist_loop(A, B):
+def dist_loop(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Distances between every row of A and every row of B, with two Python loops."""
     out = np.empty((len(A), len(B)))
     for i, a in enumerate(A):
         for j, b in enumerate(B):
@@ -13,18 +14,18 @@ def dist_loop(A, B):
     return out
 
 
-def dist_broadcast(A, B):
+def dist_broadcast(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """Exact. Builds an (n, m, d) temporary array."""
     return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
 
 
-def dist_dot(A, B):
+def dist_dot(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """Fast and small, but loses precision when points are close together and far from the origin."""
     d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
     return np.sqrt(np.maximum(d2, 0))
 
 
-def dist_dot_centered(A, B):
+def dist_dot_centered(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """The dot version, after moving the origin to the middle of the data."""
     c = np.concatenate([A, B]).mean(axis=0)
     return dist_dot(A - c, B - c)

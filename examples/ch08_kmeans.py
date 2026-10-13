@@ -6,14 +6,14 @@ import numpy as np
 from examples.ch05_broadcasting import dist_dot_centered
 
 
-def make_blobs(n_per: int, centers: np.ndarray, spread: float, seed: int):
+def make_blobs(n_per: int, centers: np.ndarray, spread: float, seed: int) -> tuple[np.ndarray, np.ndarray]:
     g = np.random.default_rng(seed)
     X = np.concatenate([c + spread * g.standard_normal((n_per, centers.shape[1])) for c in centers])
     truth = np.repeat(np.arange(len(centers)), n_per)
     return X, truth
 
 
-def kmeans(X, k, seed=0, max_iter=100):
+def kmeans(X: np.ndarray, k: int, seed: int = 0, max_iter: int = 100) -> tuple[np.ndarray, np.ndarray, int]:
     """Lloyd's algorithm. Returns (centroids, labels, iterations)."""
     g = np.random.default_rng(seed)
     C = X[g.choice(len(X), k, replace=False)].copy()
@@ -31,7 +31,7 @@ def kmeans(X, k, seed=0, max_iter=100):
     return C, labels, max_iter
 
 
-def kmeans_loop(X, k, seed=0, max_iter=100):
+def kmeans_loop(X: np.ndarray, k: int, seed: int = 0, max_iter: int = 100) -> tuple[np.ndarray, np.ndarray, int]:
     """The same algorithm with explicit loops. Used only to check `kmeans`."""
     g = np.random.default_rng(seed)
     C = X[g.choice(len(X), k, replace=False)].copy()
@@ -51,19 +51,19 @@ def kmeans_loop(X, k, seed=0, max_iter=100):
     return C, np.array(labels), max_iter
 
 
-def inertia(X, C, labels):
+def inertia(X: np.ndarray, C: np.ndarray, labels: np.ndarray) -> float:
     """Sum of squared distances from each point to its centroid."""
     return float(((X - C[labels]) ** 2).sum())
 
 
-def kmeans_best(X, k, n_init=10, seed=0):
+def kmeans_best(X: np.ndarray, k: int, n_init: int = 10, seed: int = 0) -> tuple[np.ndarray, np.ndarray, int]:
     """Run `kmeans` from `n_init` starts and keep the run with the lowest inertia."""
     seeds = np.random.SeedSequence(seed).spawn(n_init)
     runs = [kmeans(X, k, seed=s) for s in seeds]
     return min(runs, key=lambda r: inertia(X, r[0], r[1]))
 
 
-def purity(labels, truth, k):
+def purity(labels: np.ndarray, truth: np.ndarray, k: int) -> float:
     """Fraction of points whose cluster's majority true label equals their own."""
     total = 0
     for j in range(k):

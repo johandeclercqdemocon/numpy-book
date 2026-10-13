@@ -2,9 +2,11 @@
 
 *Arrays, dtypes, views, broadcasting, and the mistakes that give a wrong answer and no error.*
 
-This is a short book about NumPy for a reader who already writes Python. It has eight chapters. Each chapter ends with something that you built and tested. The book keeps theory to the minimum that changes what you type. Its subject is one idea: an array is a block of memory plus a description of how to read it, and every surprise in NumPy comes from that description.
+This is a short book about NumPy for a reader who already writes Python. It has eight chapters. Each chapter ends with something that you built and tested. Each chapter also has a **How it works** section that opens the mechanism under the API.
 
-**Nothing in it is asserted that was not run.** Every number in the text comes from code that ships with the book. A checker executes every code block and compares every printed output with the text. The book depends only on NumPy, and the whole book verifies offline and costs nothing: no network, no model, no API.
+Every function has its signature and a parameter table at the place where the chapter first uses it. A **Reference** index closes each chapter. The book keeps theory to the minimum that changes what you type. Its subject is one idea: an array is a block of memory plus a description of how to read it, and every surprise in NumPy comes from that description.
+
+**Nothing in it is asserted that was not run.** Every number in the text comes from code that ships with the book. A checker executes every code block and compares every printed output with the text. The checker compares each signature with the signature of the installed NumPy. It also compares each default in a parameter table with the real default. The book depends only on NumPy, and the whole book verifies offline and costs nothing: no network, no model, no API.
 
 The text is in Simplified Technical English. NumPy 2.5.4 on Python 3.13 produced every output in the book.
 
@@ -54,18 +56,23 @@ The checker verifies four things:
 
 - Every relative link resolves to a file that exists.
 - Every chapter has its `Build`, `Theory kept`, `Source` and `Run this first` header.
+- Every chapter has a `## How it works` and a `## Reference` section.
 - Every `python` block in a chapter, an exercise or a solution runs and exits with 0.
 - Every `text` block under a `python` block equals the real output.
+- Under every `#### name` heading, the `text` block is the real signature of that callable.
+- Every row of a parameter table is a real parameter with its real default.
+- Every `np.*` name in the text exists in the installed NumPy.
 
 A block that measures time runs alone, after the others, so that the asserted ratios are not distorted. Run the checker on an idle machine.
 
 ## Where the book is honest about its limits
 
-- **Timings are from one machine.** A block that prints a time starts its output with `# output varies`. The block has an `assert` with the claim, for example "at least 5 times faster", and the assert is what the checker enforces. The printed numbers are from the build machine. Yours will differ.
+- **Timings are from one shared machine.** A block that prints a time starts its output with `# output varies`. The block has an `assert` with the claim, for example "at least 5 times faster", and the assert is what the checker enforces. The printed numbers come from a run on a machine that other jobs also used, and yours will differ. The prose quotes only the bounds that the asserts prove.
 - **Some results are properties of the data.** In chapter 6 the centered cumulative sum has an error of exactly 0 on one seed. The chapter says that this is luck of the data, and it shows a second seed.
-- **The chapters are short.** They have 1,300 to 2,200 words each, with code. A longer book can cover `einsum`, structured arrays, masked arrays, memory maps and the FFT. Chapter 8 lists these topics as not measured.
+- **The book is short.** The chapters have 2,921 to 4,605 words each, with code and tables. A longer book can cover `einsum`, structured arrays, masked arrays, memory maps and the FFT. Chapter 8 lists these topics as not measured.
+- **Some statements are not tested.** [Appendix A](appendices/A-described-not-run.md) lists each statement that no block tested, with its source and a way to test it.
 - **Two honest options are named and not measured.** A signal-library filter and Numba are options for the loops that chapter 6 could not vectorize. The book makes no claim about their speed.
-- **First drafts were wrong.** The author predicted several results before running the code, and the runs corrected them. The first k-means run in chapter 8 failed the author's own assertion, and that failure became a section. The guessed timings in chapter 8 were wrong by a factor of 5. Chapter 1 showed `owns=False` for a reshaped array, which the author did not expect. Chapters 5, 6 and 7 each had a number or a digit count that the run corrected.
+- **First drafts were wrong.** The author wrote statements before running the code, and the runs and the audits corrected them. [Appendix B](appendices/B-what-went-wrong.md) lists 17 of them. One is a `float32` sum that is 8.8 percent too large and not too small. Another is a claim about `.base` that NumPy 2 does not follow.
 
 ## Layout
 
@@ -75,5 +82,9 @@ A block that measures time runs alone, after the others, so that the asserted ra
 | `examples/` | one runnable module per chapter |
 | `exercises/` | the exercises, and `solutions/` with the worked solutions |
 | `scripts/check_snippets.py` | the checker |
+| `scripts/audit_numbers.py` | lists each number in the prose that no output block contains, for a person to read |
+| `scripts/refresh_varies.py` | replaces each `# output varies` block with the real output of its code |
+| `examples/signatures.py` | prints and parses NumPy signatures, for the chapters and for the checker |
+| `appendices/` | what is described and not run, and what went wrong while writing |
 | `scripts/build_pdf.py` | builds one PDF with page numbers, with headless Chrome |
 | `artifacts/` | the built PDF |

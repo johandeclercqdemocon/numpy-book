@@ -56,7 +56,7 @@ The value at `a[0, 1]` is now −1, although the code never wrote to `a`.
 
 ## The function you build
 
-The `.base` attribute of a view points to the array that it looks at. A view of a view points to the array one step up. Follow the chain until it ends.
+The `.base` attribute of a view points to the array that owns the block. NumPy sets it to the owner directly, even for a view of a view, so one step is enough. The loop below follows the chain to its end anyway. A block can belong to an object that is not an array, such as `bytes`.
 
 ```python
 import numpy as np
@@ -84,6 +84,18 @@ d is a view of: False
 root of d is d: True
 ```
 
+#### `root`
+
+```text
+root(a: numpy.ndarray) -> numpy.ndarray
+```
+
+The function returns the array that owns the memory of `a`. If `a` owns its memory, it returns `a`.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | any `ndarray`, a view or an owner | an array built on `bytes` has a base that is not an array, so `root` returns that array and not the `bytes` object |
+
 The check `isinstance(a.base, np.ndarray)` is needed. An array can be built on top of bytes, a memory-mapped file, or a buffer from another library. In those cases `.base` is not an array, and the loop must stop.
 
 Two arrays share memory when `root(x) is root(y)`. This is a fast test. It is not exact, because two views of one block can still cover different bytes. For the exact answer, use `np.shares_memory`, and see the next block.
@@ -102,7 +114,59 @@ may_share_memory: True
 shares_memory:    False
 ```
 
-The function `np.may_share_memory` compares only the first and last byte that each array covers. The two interleaved slices cover the same range, so it says yes. The function `np.shares_memory` solves the exact problem and says no. The exact function can be slow for complex strides. The quick function never says no when the answer is yes.
+The function `np.may_share_memory` compares only the first and last byte that each array covers. The two interleaved slices cover the same range, so it says yes. The function `np.shares_memory` solves the exact problem and says no. The exact function can be slow for complex strides.
+
+The quick function can say yes when the exact answer is no. The next block tests the other direction on 5000 random pairs of slices: does the quick function ever say no when the exact answer is yes?
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+base = np.arange(60)
+
+
+def random_slice():
+    start = int(rng.integers(0, 60))
+    stop = int(rng.integers(start, 61))
+    step = int(rng.integers(1, 6))
+    return base[start:stop:step]
+
+
+both = quick_yes_exact_no = quick_no_exact_yes = 0
+for _ in range(5000):
+    a, b = random_slice(), random_slice()
+    if a.size == 0 or b.size == 0:
+        continue
+    exact, quick = np.shares_memory(a, b), np.may_share_memory(a, b)
+    both += exact and quick
+    quick_yes_exact_no += quick and not exact
+    quick_no_exact_yes += exact and not quick
+
+print("both say yes:                    ", both)
+print("quick says yes, exact says no:   ", quick_yes_exact_no)
+print("quick says no, exact says yes:   ", quick_no_exact_yes)
+```
+
+```text
+both say yes:                     1634
+quick says yes, exact says no:    581
+quick says no, exact says yes:    0
+```
+
+The third count is 0, as the documentation promises. A `False` from the quick function is certain. A `True` is not.
+
+#### `np.may_share_memory`
+
+```text
+np.may_share_memory(a, b, /, max_work=0)
+```
+
+The function is the quick version of `np.shares_memory`. It tests only whether the memory ranges of the two arrays overlap.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a`, `b` | required | the two arrays to compare | — |
+| `max_work` | `0` | the effort. `0` compares only the first and last byte of each array | the interleaved slices `a[::2]` and `a[1::2]` give `True`, and `np.shares_memory` gives `False` |
 
 ## Bug 1: a function that changes its argument
 
@@ -161,7 +225,7 @@ Use `.copy()` when you keep a small piece of a large array. The copy owns 10 row
 
 ## What a copy costs, and what a bad walk costs
 
-Chapter 1 said that a transpose is not in C order. A C-contiguous array has its last axis in consecutive memory. NumPy reads consecutive memory fast, because one read brings in a line of 64 bytes. Strided reads waste most of the line.
+Chapter 1 said that a transpose is not in C order. A C-contiguous array has its last axis in consecutive memory. NumPy reads consecutive memory fast. A likely cause is the line of 64 bytes that one read brings in. A strided read wastes most of that line. This book did not test the explanation.
 
 Measure two cases on a 6000-by-6000 `float64` array, which is 288 MB. The first is a plain copy against a copy of the transpose. The second is a sum over 600 rows against a sum over 600 columns.
 
@@ -195,18 +259,59 @@ print(f"sum(axis=0) / sum(axis=1)        {t_ax0 / t_ax1:5.1f}x")
 
 ```text
 # output varies
-copy of transpose / plain copy     2.9x
-600 column sums / 600 row sums    22.3x
-sum(axis=0) / sum(axis=1)          1.3x
+copy of transpose / plain copy     3.0x
+600 column sums / 600 row sums    15.8x
+sum(axis=0) / sum(axis=1)          1.7x
 ```
 
-The ratios above are from one run on the build machine. The asserts are the claims. The transposed copy is at least 1.3 times slower. The column loop is at least 3 times slower. The two whole-array sums are within a factor of 3 of each other.
+The ratios above are from one run on a shared machine. The asserts are the claims. The transposed copy is at least 1.3 times slower. The column loop is at least 3 times slower. The two whole-array sums are within a factor of 3 of each other.
 
 The third line is a result that you can find surprising. The sum along axis 0 walks against the memory order, and it is still not slow. NumPy does not add one column at a time. It adds whole rows into a row of partial sums, which is the order that memory has. The built-in reductions know the layout. Your own Python loop over columns does not.
+
+#### `np.ascontiguousarray`
+
+```text
+np.ascontiguousarray(a, dtype=None, *, like=None)
+```
+
+The function returns an array in C order. It copies only when the input is not already C-contiguous.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | any array or array-like | for an input that is already contiguous, the result is the input itself, and a write reaches the original |
+| `dtype` | `None` | the type of the result. With `None`, the dtype of the input | — |
 
 The rule that follows has two parts. Use the built-in reduction when one exists. When you must loop in Python, loop over the first axis, so that each step reads one consecutive row.
 
 ## Which operations copy
+
+Two methods decide the first rows of the table, so their signatures come first.
+
+#### `np.ndarray.reshape`
+
+```text
+np.ndarray.reshape(self, /, *shape, order='C', copy=None)
+```
+
+The method returns an array with the same values and a new shape. It returns a view when the strides allow it.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `shape` | required | the new shape, as a tuple or as separate integers. One length can be `-1`, and NumPy computes it | the product of the new lengths must equal the size, or the call raises `ValueError` |
+| `order` | `'C'` | the order in which values are read and placed. `'C'` means that the last axis changes fastest | `'F'` on a C array reorders the values, and it can force a copy |
+| `copy` | `None` | `None` gives a view when possible and a copy when not. `True` always copies. `False` raises `ValueError` if a copy cannot be avoided | with `None` you do not know if a later write reaches the original. With `False` the transposed case raises `Unable to avoid creating a copy while reshaping.` |
+
+#### `np.ndarray.copy`
+
+```text
+np.ndarray.copy(self, /, order='C')
+```
+
+The method returns a new array with its own block.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `order` | `'C'` | the memory order of the copy. `'F'` is Fortran order. `'A'` is the order of the input. `'K'` is as close to the input as possible | the function `np.copy` has the default `'K'`, so `a.T.copy()` has strides `(16, 8)` and `np.copy(a.T)` has strides `(8, 24)` for the array in the next block |
 
 The code below tests each line of the summary table that follows. It raises an error if one line is wrong.
 
@@ -260,10 +365,94 @@ np.array(a)        copy
 
 The call `a.reshape(...)` can change from a view to a copy when the array changes layout. Code that depends on the write-through must not rely on `reshape`. Test with `np.shares_memory` or use `np.may_share_memory`, and do not guess.
 
+## How it works
+
+A slice makes a new array object, not a new block. The object holds a pointer into the block, a shape, strides and a few flags. Making it costs the same for a small array and for a large one.
+
+The next block measures this. It makes a view of 5000 rows of a 288 MB array and a copy of the whole array.
+
+```python
+import timeit
+
+import numpy as np
+
+big = np.zeros((6000, 6000))
+t_view = min(timeit.repeat(lambda: big[:5000], number=1000, repeat=3)) / 1000
+t_copy = min(timeit.repeat(lambda: big.copy(), number=1, repeat=3))
+assert t_copy / t_view > 1000
+print("view is a new object over the same block:", big[:5000].base is big)
+print("view costs under a millisecond:", t_view < 1e-3)
+print("a copy costs at least 1000 times a view:", t_copy / t_view > 1000)
+```
+
+```text
+view is a new object over the same block: True
+view costs under a millisecond: True
+a copy costs at least 1000 times a view: True
+```
+
+The flags show what the object knows about its block. The `OWNDATA` flag tells who frees the memory. The `WRITEABLE` flag tells if a write is allowed.
+
+```python
+import numpy as np
+
+a = np.arange(12, dtype=np.int32).reshape(3, 4)
+cases = {
+    "a": a,
+    "a.T": a.T,
+    "a[::2]": a[::2],
+    "broadcast_to": np.broadcast_to(np.arange(3.0), (2, 3)),
+}
+print(f"{'':14s} {'C':>5s} {'F':>5s} {'write':>6s} {'owns':>6s}")
+for name, v in cases.items():
+    f = v.flags
+    print(f"{name:14s} {f.c_contiguous!s:>5s} {f.f_contiguous!s:>5s} {f.writeable!s:>6s} {f.owndata!s:>6s}")
+
+try:
+    cases["broadcast_to"][0, 0] = 1.0
+except ValueError as e:
+    print("write to broadcast_to:", e)
+
+frozen = a.copy()
+frozen.setflags(write=False)
+try:
+    frozen[0, 0] = 1
+except ValueError as e:
+    print("write to frozen copy: ", e)
+```
+
+```text
+                   C     F  write   owns
+a               True False   True  False
+a.T            False  True   True  False
+a[::2]         False False   True  False
+broadcast_to   False False  False  False
+write to broadcast_to: assignment destination is read-only
+write to frozen copy:  assignment destination is read-only
+```
+
+The result of `np.broadcast_to` is read-only. The NumPy documentation gives the reason: many of its elements share one memory location. A write to one element changes all of them.
+
+You can protect your own arrays in the same way with `setflags(write=False)`. A function that must not change its argument can take a read-only view. A write then fails at once with an error. It does not give a wrong number later.
+
+**The invariant.** A view and its owner read the same bytes. A write through either one is visible through the other, and `np.shares_memory` returns `True`.
+
+**The failure.** A function that writes into its argument changes the data of the caller, as bug 1 showed. The cost is not a wrong number in the function. It is a wrong number somewhere else, later, with no link to the cause.
+
+## Reference
+
+| Callable | Introduced in | Contract |
+|---|---|---|
+| `root` | The function you build | the array that owns the memory of a view |
+| `np.may_share_memory` | The function you build | quick test: do the memory ranges overlap |
+| `np.ascontiguousarray` | What a copy costs, and what a bad walk costs | C-ordered array, copied only when needed |
+| `np.ndarray.reshape` | Which operations copy | new shape, a view when the strides allow |
+| `np.ndarray.copy` | Which operations copy | a new block, in a given memory order |
+
 ## What you have now
 
 You have `root(a)`, and you can say which of your arrays share memory. You saw two bugs that come from views. A function changed its argument. A small view kept 288 MB alive.
 
-You also measured the cost of a walk against the memory order. It is 3 times slower for a copy and 22 times slower for a Python loop. The built-in reductions do not have this fault.
+You also measured the cost of a walk against the memory order. The asserts prove two bounds. A copy of the transpose is at least 1.3 times slower. A Python loop over columns is at least 3 times slower. The built-in reductions do not have this fault.
 
 Chapter 4 uses the other half of the rule. Indexing with lists and masks makes copies, and writing through them has its own trap.

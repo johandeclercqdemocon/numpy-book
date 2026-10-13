@@ -38,6 +38,18 @@ error: operands could not be broadcast together with shapes (3,) (4,)
 
 Read the second line with the rule. The shapes `(8, 1, 6, 1)` and `(7, 1, 5)` align as columns `8 1 6 1` over `_ 7 1 5`. The columns pair as 1 with 5, 6 with 1, 1 with 7, and 8 with nothing. The result is `(8, 7, 6, 5)`. The last line shows what happens when two lengths differ and neither is 1.
 
+#### `np.broadcast_shapes`
+
+```text
+np.broadcast_shapes(*args)
+```
+
+The function returns the shape that the rule gives for the input shapes. It makes no array, so it is a cheap test.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `args` | required | two or more shapes, each a tuple of integers | when two lengths differ and neither is 1, it raises `ValueError` and names the shapes |
+
 Use `None` or `np.newaxis` to add a length of 1 at any position. This is the tool that you use to line up the axes that you want.
 
 ```python
@@ -81,6 +93,22 @@ result of an add: 24000 bytes
 
 The stretched array looks like 1000 rows. It has a block of 24 bytes and a stride of 0 along the first axis. The cost appears when an operation makes a result, because the result must have all 1000 rows.
 
+#### `np.broadcast_to`
+
+```text
+np.broadcast_to(array, shape, subok=False)
+```
+
+The function returns a read-only view with the given shape. It makes the stride of each stretched axis 0.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `array` | required | the array to stretch | — |
+| `shape` | required | the target shape. The rule of this chapter must give it from the shape of `array` | a shape that the rule does not allow raises `ValueError` |
+| `subok` | `False` | with `True`, a subclass of `ndarray` passes through | — |
+
+A write to the result raises `ValueError: assignment destination is read-only`. Many of its elements share one memory location, and a write changes all of them.
+
 ## The trap: a result you did not mean
 
 A vector of shape `(n,)` and a column of shape `(n, 1)` broadcast to `(n, n)`. NumPy gives no warning, because the rule is satisfied.
@@ -115,6 +143,20 @@ For `n = 1000` the mistake costs 8 MB, and nobody notices. For `n = 100,000` the
 
 The third part of the block is the correct way to subtract a row mean. The call `X.mean(axis=1)` has shape `(5,)`, which does not align with `(5, 3)`. The argument `keepdims=True` keeps the length-1 axis, so the shape is `(5, 1)` and the subtraction works.
 
+#### `np.mean`
+
+```text
+np.mean(a, axis=None, dtype=None, out=None, keepdims=<no value>, *, where=<no value>)
+```
+
+The function returns the mean along an axis. The method `a.mean(...)` takes the same arguments after `self`.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array | an empty array gives `nan` and a warning |
+| `axis` | `None` | the axis to average along. With `None`, all values | `axis=1` on a `(5, 3)` array gives shape `(5,)`, which does not align with `(5, 3)` |
+| `keepdims` | `<no value>` | with `True`, the averaged axis stays with length 1 | without it, the subtraction of a row mean from the array is an error |
+
 The habit that follows: assert the shape of a result at a boundary. A line such as `assert r.shape == (n,)` is cheap and catches this mistake at once.
 
 ## The function you build
@@ -125,7 +167,8 @@ Given `A` with `n` points and `B` with `m` points, in `d` dimensions, build the 
 import numpy as np
 
 
-def dist_loop(A, B):
+def dist_loop(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Distances between every row of A and every row of B, with two Python loops."""
     out = np.empty((len(A), len(B)))
     for i, a in enumerate(A):
         for j, b in enumerate(B):
@@ -133,12 +176,12 @@ def dist_loop(A, B):
     return out
 
 
-def dist_broadcast(A, B):
+def dist_broadcast(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """Exact. Builds an (n, m, d) temporary array."""
     return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
 
 
-def dist_dot(A, B):
+def dist_dot(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """Fast and small, but loses precision when points are close together and far from the origin."""
     d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
     return np.sqrt(np.maximum(d2, 0))
@@ -162,6 +205,47 @@ The broadcast version is the same formula as the loop, with `A[:, None, :]` of s
 
 On this well-behaved input, all three agree. The dot version differs from the loop by about 3e-15, which is the rounding of `float64`.
 
+The four versions have one signature. They differ in what goes wrong, and each of the next sections measures one of those costs.
+
+#### `dist_loop`
+
+```text
+dist_loop(A: numpy.ndarray, B: numpy.ndarray) -> numpy.ndarray
+```
+
+The function returns the `(n, m)` matrix of distances with two Python loops. It is the definition.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A` | required | `n` points as an `(n, d)` array | — |
+| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+
+#### `dist_broadcast`
+
+```text
+dist_broadcast(A: numpy.ndarray, B: numpy.ndarray) -> numpy.ndarray
+```
+
+The function returns the same matrix with one broadcast subtraction.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A` | required | `n` points as an `(n, d)` array | the temporary array has `n * m * d` values: 2080 MB for 2000 points of 64 dimensions |
+| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+
+#### `dist_dot`
+
+```text
+dist_dot(A: numpy.ndarray, B: numpy.ndarray) -> numpy.ndarray
+```
+
+The function returns the same matrix from norms and one matrix product.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A` | required | `n` points as an `(n, d)` array | for points in a cube of side 0.01 at 10,000: error 3.5e-4 in `float64`. In `float32` the largest distance is 8.0 where the true value is 0.0144 |
+| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | the same loss. Centering removes it, as the section on precision shows |
+
 ## Cost 1: time
 
 ```python
@@ -170,7 +254,8 @@ import timeit
 import numpy as np
 
 
-def dist_loop(A, B):
+def dist_loop(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Distances between every row of A and every row of B, with two Python loops."""
     out = np.empty((len(A), len(B)))
     for i, a in enumerate(A):
         for j, b in enumerate(B):
@@ -178,11 +263,13 @@ def dist_loop(A, B):
     return out
 
 
-def dist_broadcast(A, B):
+def dist_broadcast(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Exact. Builds an (n, m, d) temporary array."""
     return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
 
 
-def dist_dot(A, B):
+def dist_dot(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Fast and small, but loses precision when points are close together and far from the origin."""
     d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
     return np.sqrt(np.maximum(d2, 0))
 
@@ -199,12 +286,12 @@ for name, sec in t.items():
 
 ```text
 # output varies
-dist_loop         279.18 ms
-dist_broadcast      8.76 ms
-dist_dot            0.75 ms
+dist_loop          298.99 ms
+dist_broadcast      13.27 ms
+dist_dot             3.61 ms
 ```
 
-The broadcast version is about 30 times faster than the loop. The dot version is about 10 times faster again. The asserts require at least 10 and at least 2. The dot version wins because a matrix product uses an optimized library routine and because it does less work: it never forms the `(n, m, d)` array.
+The asserts prove two bounds. The broadcast version is at least 10 times faster than the loop. The dot version is at least 2 times faster than the broadcast version. The dot version never forms the `(n, m, d)` array, and that is a likely cause of its speed. This book did not test it.
 
 ## Cost 2: memory
 
@@ -224,11 +311,13 @@ def peak_mb(f, *args):
     return peak / 1e6
 
 
-def dist_broadcast(A, B):
+def dist_broadcast(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Exact. Builds an (n, m, d) temporary array."""
     return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
 
 
-def dist_dot(A, B):
+def dist_dot(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Fast and small, but loses precision when points are close together and far from the origin."""
     d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
     return np.sqrt(np.maximum(d2, 0))
 
@@ -258,7 +347,8 @@ The dot version subtracts two large numbers that are almost equal. The squared n
 import numpy as np
 
 
-def dist_loop(A, B):
+def dist_loop(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Distances between every row of A and every row of B, with two Python loops."""
     out = np.empty((len(A), len(B)))
     for i, a in enumerate(A):
         for j, b in enumerate(B):
@@ -266,16 +356,19 @@ def dist_loop(A, B):
     return out
 
 
-def dist_broadcast(A, B):
+def dist_broadcast(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Exact. Builds an (n, m, d) temporary array."""
     return np.sqrt(((A[:, None, :] - B[None, :, :]) ** 2).sum(-1))
 
 
-def dist_dot(A, B):
+def dist_dot(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Fast and small, but loses precision when points are close together and far from the origin."""
     d2 = (A ** 2).sum(1)[:, None] + (B ** 2).sum(1)[None, :] - 2 * A @ B.T
     return np.sqrt(np.maximum(d2, 0))
 
 
-def dist_dot_centered(A, B):
+def dist_dot_centered(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """The dot version, after moving the origin to the middle of the data."""
     c = np.concatenate([A, B]).mean(axis=0)
     return dist_dot(A - c, B - c)
 
@@ -308,6 +401,32 @@ The `float32` lines are worse. The squared norms are about 3e8. At that size the
 
 The centered version is correct. After the origin moves to the middle of the data, the numbers are small. Then `float32` has digits to spare.
 
+#### `np.concatenate`
+
+```text
+np.concatenate(arrays, /, axis=0, out=None, *, dtype=None, casting='same_kind')
+```
+
+The function joins arrays along an existing axis. The function below uses it to put the two point sets in one array before it takes the mean.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `arrays` | required | a sequence of arrays. All shapes must match, except along `axis` | other shapes raise `ValueError` and name the axis that differs |
+| `axis` | `0` | the axis to join along | with `None`, the arrays are flattened first |
+
+#### `dist_dot_centered`
+
+```text
+dist_dot_centered(A: numpy.ndarray, B: numpy.ndarray) -> numpy.ndarray
+```
+
+The function moves the origin to the mean of both point sets, then calls `dist_dot`.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A` | required | `n` points as an `(n, d)` array | the points must be in a small range. If they are spread over a large range, centering does not help |
+| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+
 Centering is the fix to remember. It costs one mean and two subtractions. It does not help when the points are spread over a large range. In that case the loss is a property of the problem and not of the method.
 
 ## Which one to use
@@ -319,6 +438,102 @@ Centering is the fix to remember. It costs one mean and two subtractions. It doe
 | `dist_dot_centered` | fastest | a few results | good when centered |
 
 Use the dot version with centering as the default, and test it against the broadcast version on a small sample of your data. Use the broadcast version when you need the exact differences, for example when you also need the direction `a - b`. Use the loop only to check the others.
+
+## How it works
+
+The rule is a small algorithm. Align the shapes on the right, and for each position take the one length that is not 1. If two lengths differ and neither is 1, stop with an error. The next block writes it in ten lines, and tests it against `np.broadcast_shapes` on 2000 random pairs of shapes.
+
+```python
+import numpy as np
+
+
+def broadcast_shape(*shapes):
+    """The broadcast rule written out: right-aligned, equal or 1."""
+    n = max(len(s) for s in shapes)
+    padded = [(1,) * (n - len(s)) + tuple(s) for s in shapes]
+    out = []
+    for lengths in zip(*padded):
+        not_one = {length for length in lengths if length != 1}
+        if len(not_one) > 1:
+            raise ValueError(f"lengths {sorted(not_one)} cannot broadcast")
+        out.append(not_one.pop() if not_one else 1)
+    return tuple(out)
+
+
+rng = np.random.default_rng(0)
+agree = valid = 0
+for _ in range(2000):
+    shapes = [tuple(int(x) for x in rng.choice([1, 2, 3], size=rng.integers(0, 4))) for _ in range(2)]
+    try:
+        want = np.broadcast_shapes(*shapes)
+    except ValueError:
+        want = None
+    try:
+        got = broadcast_shape(*shapes)
+    except ValueError:
+        got = None
+    agree += got == want
+    valid += want is not None
+
+print("pairs tested:       ", 2000)
+print("pairs that broadcast:", valid)
+print("pairs that agree:    ", agree)
+```
+
+```text
+pairs tested:        2000
+pairs that broadcast: 1649
+pairs that agree:     2000
+```
+
+The loops over the stretched axes cost nothing in memory, because the stride is 0. The next block shows the strides that the rule gives, and then follows the shapes through one call of `dist_broadcast`.
+
+```python
+import numpy as np
+
+col, row = np.broadcast_arrays(np.arange(3.0)[:, None], np.arange(4.0))
+print("shapes: ", col.shape, row.shape)
+print("strides:", col.strides, row.strides)
+
+rng = np.random.default_rng(0)
+A, B = rng.random((5, 2)), rng.random((7, 2))
+steps = [
+    ("A[:, None, :]", A[:, None, :]),
+    ("B[None, :, :]", B[None, :, :]),
+    ("difference", A[:, None, :] - B[None, :, :]),
+    ("squared and summed over d", ((A[:, None, :] - B[None, :, :]) ** 2).sum(-1)),
+]
+for name, value in steps:
+    print(f"{name:28s} {value.shape}")
+```
+
+```text
+shapes:  (3, 4) (3, 4)
+strides: (8, 0) (0, 8)
+A[:, None, :]                (5, 1, 2)
+B[None, :, :]                (1, 7, 2)
+difference                   (5, 7, 2)
+squared and summed over d    (5, 7)
+```
+
+Each stretched axis has stride 0, so the two inputs are read in place and the subtraction makes the one new array, `(5, 7, 2)`. This array is the cost. It has `n * m * d` values, and a sum over the last axis then shrinks it to the `(5, 7)` result.
+
+**The invariant.** The shape of the result is the right-aligned maximum of the input shapes, and the rule makes no copy of the inputs. The block above tests the rule against NumPy on 2000 cases.
+
+**The failure.** A shape that is almost right passes. A `(n,)` against an `(n, 1)` is allowed, and the result is `(n, n)`. The error comes only when two lengths differ and neither is 1. Test the shape of a result, because the rule cannot know what you meant.
+
+## Reference
+
+| Callable | Introduced in | Contract |
+|---|---|---|
+| `np.broadcast_shapes` | The rule | the result shape for given shapes, with no array |
+| `np.broadcast_to` | A stretch costs no memory | a read-only view with the target shape |
+| `np.mean` | The trap: a result you did not mean | mean along an axis, with `keepdims` |
+| `dist_loop` | The function you build | distances with two Python loops |
+| `dist_broadcast` | The function you build | distances with one broadcast subtraction |
+| `dist_dot` | The function you build | distances from norms and a matrix product |
+| `np.concatenate` | Cost 3: precision | join arrays along an existing axis |
+| `dist_dot_centered` | Cost 3: precision | the dot version, with the origin in the middle |
 
 ## What you have now
 

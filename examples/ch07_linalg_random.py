@@ -7,7 +7,7 @@ def hilbert(n: int) -> np.ndarray:
     return 1.0 / (i[:, None] + i[None, :] + 1)
 
 
-def bootstrap_slopes(x, y, n_boot: int, seed) -> np.ndarray:
+def bootstrap_slopes(x: np.ndarray, y: np.ndarray, n_boot: int, seed) -> np.ndarray:
     """Slope of the least-squares line for `n_boot` resamples of the rows, all at once."""
     g = np.random.default_rng(seed)
     idx = g.integers(0, len(x), (n_boot, len(x)))
@@ -17,7 +17,7 @@ def bootstrap_slopes(x, y, n_boot: int, seed) -> np.ndarray:
     return (xc * yc).sum(axis=1) / (xc * xc).sum(axis=1)
 
 
-def fit_line(x, y, n_boot: int = 1000, seed=0):
+def fit_line(x: np.ndarray, y: np.ndarray, n_boot: int = 1000, seed=0) -> tuple[float, float, tuple[float, float]]:
     """Return (intercept, slope, (low, high)) with a 95% bootstrap interval for the slope."""
     X = np.column_stack([np.ones_like(x), x])
     (b0, b1), *_ = np.linalg.lstsq(X, y, rcond=None)
