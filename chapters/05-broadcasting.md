@@ -48,7 +48,7 @@ The function returns the shape that the rule gives for the input shapes. It make
 
 | parameter | default | what it does | what goes wrong |
 |---|---|---|---|
-| `args` | required | two or more shapes, each a tuple of integers | when two lengths differ and neither is 1, it raises `ValueError` and names the shapes |
+| `*args` | — | any number of shapes, each a tuple of integers or one integer. With one shape, the result is that shape. With none, `()` | when two lengths differ and neither is 1, it raises `ValueError` and names the shapes |
 
 Use `None` or `np.newaxis` to add a length of 1 at any position. This is the tool that you use to line up the axes that you want.
 
@@ -67,7 +67,7 @@ print((x[:, None] - x[None, :]).shape)
 (3, 3)
 ```
 
-The column vector `x[:, None]` has shape `(3, 1)`, and the row vector `x[None, :]` has shape `(1, 3)`. The result `(3, 3)` holds every difference `x[i] - x[j]`.
+The column vector `x[:, None]` has shape `(3, 1)`, and the row vector `x[None, :]` has shape `(1, 3)`. The result `(3, 3)` holds every difference `x[i] - x[j]`. The array `x` holds 0, 1 and 2 on purpose, so each difference is also the difference of two positions.
 
 ## A stretch costs no memory
 
@@ -155,7 +155,10 @@ The function returns the mean along an axis. The method `a.mean(...)` takes the 
 |---|---|---|---|
 | `a` | required | the array | an empty array gives `nan` and a warning |
 | `axis` | `None` | the axis to average along. With `None`, all values | `axis=1` on a `(5, 3)` array gives shape `(5,)`, which does not align with `(5, 3)` |
+| `dtype` | `None` | the type of the running total and of the result. With `None`, `float64` for an integer input, and the input type for a float input | a `float32` input gives a `float32` mean |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
 | `keepdims` | `<no value>` | with `True`, the averaged axis stays with length 1 | without it, the subtraction of a row mean from the array is an error |
+| `where` | `<no value>` | a boolean array. Only the values where it is `True` are averaged | if no value is `True`, the result is `nan` with a `RuntimeWarning` |
 
 The habit that follows: assert the shape of a result at a boundary. A line such as `assert r.shape == (n,)` is cheap and catches this mistake at once.
 
@@ -395,12 +398,6 @@ float32, largest distance, dot:      8.0
 float32, largest distance, centered: 0.0144
 ```
 
-The first three lines are for `float64`. The error of the plain dot version is 3.5e-4, and the mean true distance is 6.9e-3. The error is 5 percent of the answer. After centering, the error is 1.2e-10.
-
-The `float32` lines are worse. The squared norms are about 3e8. At that size the gap between neighbor `float32` values is 32. The plain dot version reports a largest distance of 8.0. The true value is 0.0144. The answer is wrong by a factor of more than 500.
-
-The centered version is correct. After the origin moves to the middle of the data, the numbers are small. Then `float32` has digits to spare.
-
 #### `np.concatenate`
 
 ```text
@@ -413,6 +410,9 @@ The function joins arrays along an existing axis. The function below uses it to 
 |---|---|---|---|
 | `arrays` | required | a sequence of arrays. All shapes must match, except along `axis` | other shapes raise `ValueError` and name the axis that differs |
 | `axis` | `0` | the axis to join along | with `None`, the arrays are flattened first |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | a wrong shape raises `ValueError`. You cannot give both `out` and `dtype`: that raises `TypeError` |
+| `dtype` | `None` | the type of the result. With `None`, the type that holds all inputs | `float64` inputs with `dtype=np.int64` raise `TypeError` under the default `casting` |
+| `casting` | `'same_kind'` | which casts are allowed when `dtype` or `out` is given. `'unsafe'` allows all | with `'unsafe'`, `1.5` becomes `1` with no warning |
 
 #### `dist_dot_centered`
 
@@ -428,6 +428,12 @@ The function moves the origin to the mean of both point sets, then calls `dist_d
 | `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
 
 Centering is the fix to remember. It costs one mean and two subtractions. It does not help when the points are spread over a large range. In that case the loss is a property of the problem and not of the method.
+
+The first three lines are for `float64`. The error of the plain dot version is 3.5e-4, and the mean true distance is 6.9e-3. The error is 5 percent of the answer. After centering, the error is 1.2e-10.
+
+The `float32` lines are worse. The squared norms are about 3e8. At that size the gap between neighbor `float32` values is 32. The plain dot version reports a largest distance of 8.0. The true value is 0.0144. The answer is wrong by a factor of more than 500.
+
+The centered version is correct. After the origin moves to the middle of the data, the numbers are small. Then `float32` has digits to spare.
 
 ## Which one to use
 

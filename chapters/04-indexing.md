@@ -162,7 +162,7 @@ When you mix a slice and an index list in one index, NumPy can move the axes of 
 ```python
 import numpy as np
 
-A = np.arange(24).reshape(2, 3, 4)
+A = np.zeros((2, 3, 4))      # only the shapes matter here
 print(A[0, :, [0, 1]].shape)
 print(A[:, [0, 1], [0, 1]].shape)
 print(A[0][:, [0, 1]].shape)
@@ -358,6 +358,7 @@ The function puts the `kth` smallest value in its sorted position. It puts small
 | `kth` | required | the index of the value to put in place. A negative index counts from the end, so `-10` puts the 10 largest at the end | the values on each side are not sorted |
 | `axis` | `-1` | the axis to partition along | — |
 | `kind` | `'introselect'` | the selection algorithm. NumPy has one | — |
+| `order` | `None` | for an array with named fields (a structured array), the field names to compare | on an array without fields, any value raises `ValueError` |
 
 ## How it works
 
@@ -382,7 +383,7 @@ mask picks the same values as the positions: True
 positions are two arrays, one for each axis: [(12,), (12,)]
 ```
 
-Second, the shape of the result is the broadcast shape of the index arrays. A column of row numbers and a row of column numbers give a grid, as in chapter 5.
+Second, the shape of the result is the broadcast shape of the index arrays. A column of row numbers and a row of column numbers give a grid, as in chapter 5. The array `m` below is built with `np.arange(20).reshape(4, 5)` on purpose. The value of each cell is its position in the flat order, so the output shows which cells the index picked.
 
 ```python
 import numpy as np

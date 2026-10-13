@@ -17,9 +17,9 @@ The operator `@` is the matrix product. It works on vectors, matrices and stacks
 ```python
 import numpy as np
 
-A = np.arange(6.0).reshape(2, 3)
-v = np.array([1.0, 0.0, -1.0])
-stack = np.arange(24.0).reshape(4, 2, 3)
+A = np.ones((2, 3))          # only the shapes matter here
+v = np.ones(3)
+stack = np.ones((4, 2, 3))
 
 print("matrix @ vector      :", (A @ v).shape)
 print("stack of 4 @ vector  :", (stack @ v).shape)
@@ -45,8 +45,15 @@ The ufunc computes the matrix product. The operator `@` calls it.
 | parameter | default | what it does | what goes wrong |
 |---|---|---|---|
 | `x1`, `x2` | required | the two inputs. The last axis of `x1` must match the second-to-last axis of `x2`. Leading axes broadcast | a mismatch raises `ValueError`. The `*` operator gives the right shape and the wrong values for two square matrices |
-| `out` | `None` | an array to write the result into | — |
+| `out` | `None` | an array to write the result into | an `int64` `out` for `float64` inputs raises `UFuncTypeError` |
+| `axes` | `<no value>` | a list of three pairs: the two axes that hold the matrix in `x1`, in `x2` and in the result. With `<no value>`, the last two axes | `axes=[(1, 2), (0, 1), (1, 2)]` on shapes `(3, 2, 4)` and `(4, 5)` gives `(3, 2, 5)`. A pair that names the wrong axes raises `ValueError` |
+| `axis` | `<no value>` | one axis for all operands, for a generalized ufunc with one shared core axis | `np.matmul` has more than one core axis, so any value raises `TypeError` |
+| `keepdims` | `False` | for a generalized ufunc, keep the reduced core axes with length 1 | `np.matmul` does not support it. `keepdims=True` raises `TypeError` |
+| `casting` | `'same_kind'` | which casts are allowed to write the result. As for `np.add` in chapter 6 | — |
 | `dtype` | `None` | the type of the computation and of the result | — |
+| `order` | `'K'` | the memory order of the result | — |
+| `subok` | `True` | with `True`, a subclass of `ndarray` gives a result of that subclass | — |
+| `signature` | `None` | the types of the inner loop, as for `np.add` in chapter 6 | — |
 
 Use `@` and `np.dot` only on arrays. Do not use the `*` operator for a matrix product. It multiplies element by element, and for two square matrices it gives a result with the right shape and the wrong values.
 
@@ -116,7 +123,7 @@ For `n = 12` the condition number is 1.8e16, which is more than the number of di
 
 The last two columns show the real difference. The residual `H @ x - b` of `solve` is at the rounding level for every `n`, even when `x` is wrong. The residual of `inv` is 6e7 times larger at `n = 8` and 1e14 times larger at `n = 12`. The inverse method gives an answer that does not even satisfy the equation. Use the residual as a check: it tells you if the method did its job, where the error tells you only that the problem was hard.
 
-Speed points the same way. The next block times both on a 1000-by-1000 system. It pins the linear algebra library to one thread before it imports NumPy. A shared machine then gives the same ratio from run to run.
+Speed points the same way. The next block times both on a 1000-by-1000 system. It pins the linear algebra library to one thread before it imports NumPy. It also uses `np.random.default_rng` to make a random matrix. Chapter 7 explains that function in the section on random numbers below. A shared machine then gives the same ratio from run to run.
 
 ```python
 import os
@@ -258,6 +265,7 @@ The method returns random integers from the half-open range `[low, high)`.
 | `low` | required | the smallest value. With `high` unset, it is the upper limit and the smallest value is 0 | — |
 | `high` | `None` | the upper limit. It is not included | `integers(0, 3)` never gives 3 |
 | `size` | `None` | the shape of the result | — |
+| `dtype` | `<class 'numpy.int64'>` | the integer type of the result | a `high` that the type cannot hold raises `ValueError`: `integers(0, 300, dtype=np.int8)`. A float type raises `TypeError` |
 | `endpoint` | `False` | with `True`, `high` is included | `integers(0, 3, endpoint=True)` can give 3. Without `endpoint`, the largest value is 2 |
 
 ## Parallel streams: `spawn`, not `seed + i`
@@ -299,6 +307,8 @@ The class turns a seed into the start states of one or more generators. It also 
 |---|---|---|---|
 | `entropy` | `None` | the seed: an integer or a list of integers. With `None`, fresh entropy | with `None`, the sequence cannot be repeated |
 | `spawn_key` | `()` | the position of this sequence in a tree of sequences | a child made by `spawn` has a key such as `(0,)`, and two children must not share a key |
+| `pool_size` | `4` | the size of the internal pool of entropy, in 32-bit words. Keep the default | a value below 4 raises `ValueError` |
+| `n_children_spawned` | `0` | the number of children that `spawn` made already. The next child gets this number as its key | a sequence that you build again from the same seed starts at 0, and its children repeat the first children: keys `(0,)` and `(1,)` again. Pass the count to continue at `(2,)` |
 
 #### `np.random.SeedSequence.spawn`
 
@@ -378,7 +388,11 @@ The function returns the value below which a given percent of the data lie.
 | `a` | required | the data | — |
 | `q` | required | the percent, from 0 to 100, as a number or a list | a fraction such as `0.025` means 0.025 percent. Use `2.5` |
 | `axis` | `None` | the axis to work along. With `None`, the flattened array | — |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
+| `overwrite_input` | `False` | with `True`, the function can sort the input in place to save memory | the input changes: `[5, 1, 4, 2, 3]` became `[1, 2, 3, 4, 5]` after one call for the median |
 | `method` | `'linear'` | how to estimate between data points. There are many | `'nearest'` gives data values only, and `'linear'` can give a value that is not in the data |
+| `keepdims` | `False` | with `True`, the reduced axes stay with length 1 | with a list for `q`, the result gets a new first axis: `q=[25, 75]` with `axis=1` on a `(3, 4)` array gives `(2, 3, 1)` |
+| `weights` | `None` | a weight for each value of `a` | only `method='inverted_cdf'` accepts weights. With the default `'linear'`, it raises `ValueError` |
 
 #### `hilbert`
 

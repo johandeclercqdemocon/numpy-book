@@ -96,6 +96,8 @@ The method picks elements of an array, or integers below an integer, at random.
 | `size` | `None` | how many to pick | — |
 | `replace` | `True` | with `False`, no element is picked twice | with `True`, two starting centroids can be the same point |
 | `p` | `None` | the probability of each element. With `None`, all are equal | — |
+| `axis` | `0` | the axis of `a` to pick along, when `a` is an array. With `0`, the function picks rows | — |
+| `shuffle` | `True` | with `replace=False`, puts the picked elements in random order. `False` is faster | with `False`, the order of the result is not random: `choice(10, 10, replace=False, shuffle=False)` gave `[0 1 2 ... 9]` |
 
 #### `np.argmin`
 
@@ -109,6 +111,7 @@ The function returns the index of the smallest value. If two values are equal, t
 |---|---|---|---|
 | `a` | required | the array | — |
 | `axis` | `None` | the axis to search along. With `None`, the flattened array | with `None` on an `(n, k)` matrix, you get one flat index and not one label for each point |
+| `out` | `None` | an integer array to write the indices into. Its shape must be the shape of the result | a `float64` `out` raises `TypeError`, and a wrong shape raises `ValueError` |
 | `keepdims` | `<no value>` | with `True`, the axis stays with length 1 | — |
 
 #### `np.zeros_like`
@@ -123,6 +126,10 @@ The function returns an array of zeros with the shape of `a`.
 |---|---|---|---|
 | `a` | required | the array whose shape is copied | — |
 | `dtype` | `None` | the type of the result. With `None`, the type of `a` | an integer `a` gives an integer result, which cannot hold a mean |
+| `order` | `'K'` | the memory order of the result. `'K'` keeps the order of `a` | — |
+| `subok` | `True` | with `True`, a subclass of `ndarray`, such as a masked array, gives a result of that subclass | — |
+| `shape` | `None` | a new shape for the result. With `None`, the shape of `a` | — |
+| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
 
 #### `np.array_equal`
 

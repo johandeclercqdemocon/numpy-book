@@ -6,7 +6,7 @@ This is a short book about NumPy for a reader who already writes Python. It has 
 
 Every function has its signature and a parameter table at the place where the chapter first uses it. A **Reference** index closes each chapter. The book keeps theory to the minimum that changes what you type. Its subject is one idea: an array is a block of memory plus a description of how to read it, and every surprise in NumPy comes from that description.
 
-**Nothing in it is asserted that was not run.** Every number in the text comes from code that ships with the book. A checker executes every code block and compares every printed output with the text. The checker compares each signature with the signature of the installed NumPy. It also compares each default in a parameter table with the real default. The book depends only on NumPy, and the whole book verifies offline and costs nothing: no network, no model, no API.
+**Nothing in it is asserted that was not run.** Every number in the text comes from code that ships with the book. A checker executes every code block and compares every printed output with the text. The checker compares each signature with the signature of the installed NumPy. It also compares each default in a parameter table with the real default, and it fails when a parameter of the signature has no row in the table. The book depends only on NumPy, and the whole book verifies offline and costs nothing: no network, no model, no API.
 
 The text is in Simplified Technical English. NumPy 2.5.4 on Python 3.13 produced every output in the book.
 
@@ -61,6 +61,7 @@ The checker verifies four things:
 - Every `text` block under a `python` block equals the real output.
 - Under every `#### name` heading, the `text` block is the real signature of that callable.
 - Every row of a parameter table is a real parameter with its real default.
+- Every parameter of the signature, `*args` and `**kwargs` included, has a row in the table.
 - Every `np.*` name in the text exists in the installed NumPy.
 
 A block that measures time runs alone, after the others, so that the asserted ratios are not distorted. Run the checker on an idle machine.
@@ -72,7 +73,7 @@ A block that measures time runs alone, after the others, so that the asserted ra
 - **The book is short.** The chapters have 2,921 to 4,605 words each, with code and tables. A longer book can cover `einsum`, structured arrays, masked arrays, memory maps and the FFT. Chapter 8 lists these topics as not measured.
 - **Some statements are not tested.** [Appendix A](appendices/A-described-not-run.md) lists each statement that no block tested, with its source and a way to test it.
 - **Two honest options are named and not measured.** A signal-library filter and Numba are options for the loops that chapter 6 could not vectorize. The book makes no claim about their speed.
-- **First drafts were wrong.** The author wrote statements before running the code, and the runs and the audits corrected them. [Appendix B](appendices/B-what-went-wrong.md) lists 17 of them. One is a `float32` sum that is 8.8 percent too large and not too small. Another is a claim about `.base` that NumPy 2 does not follow.
+- **First drafts were wrong.** The author wrote statements before running the code, and the runs and the audits corrected them. [Appendix B](appendices/B-what-went-wrong.md) lists 23 of them. One is a `float32` sum that is 8.8 percent too large and not too small. Another is a claim about `.base` that NumPy 2 does not follow.
 
 ## Layout
 
@@ -82,6 +83,7 @@ A block that measures time runs alone, after the others, so that the asserted ra
 | `examples/` | one runnable module per chapter |
 | `exercises/` | the exercises, and `solutions/` with the worked solutions |
 | `scripts/check_snippets.py` | the checker |
+| `scripts/audit_examples.py` | lists code samples that build data with `arange(...).reshape(...)`, pass `dtype=` without a reason, or call a function before its signature block |
 | `scripts/audit_numbers.py` | lists each number in the prose that no output block contains, for a person to read |
 | `scripts/refresh_varies.py` | replaces each `# output varies` block with the real output of its code |
 | `examples/signatures.py` | prints and parses NumPy signatures, for the chapters and for the checker |

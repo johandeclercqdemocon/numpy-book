@@ -12,7 +12,8 @@ def describe(a: np.ndarray) -> str:
 
 
 def main() -> None:
-    a = np.arange(12, dtype=np.int32).reshape(3, 4)
+    a = np.array([[3, 1, 4],
+                  [1, 5, 9]])
     print(describe(a))
     print(describe(a.T))
 

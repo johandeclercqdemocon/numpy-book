@@ -52,6 +52,9 @@ The ufunc adds two arrays element by element, with the broadcast rule of chapter
 | `where` | `True` | a boolean array. Elements where it is `False` are skipped | without `out`, the skipped elements have undefined values |
 | `casting` | `'same_kind'` | which casts the ufunc may do to match types | `'unsafe'` allows `float64` into `int64`, and it truncates |
 | `dtype` | `None` | the type of the computation and of the result | `dtype=np.int64` on two `int8` values 127 and 1 gives 128 and not -128 |
+| `order` | `'K'` | the memory order of the result. `'K'` follows the inputs, `'F'` puts the first axis in consecutive memory | — |
+| `subok` | `True` | with `True`, a subclass of `ndarray` in the input, such as a masked array, gives a result of that subclass. With `False`, a plain `ndarray` | with `False`, the result of a masked array has no mask |
+| `signature` | `None` | the types of the inner loop, as a string such as `'dd->d'` (two `float64` in, one out). It forces one loop | `'ff->f'` on `float64` inputs computes in `float32` |
 
 #### `np.add.reduce`
 
@@ -64,9 +67,10 @@ The method folds the array along one axis to one value for each position of the 
 | parameter | default | what it does | what goes wrong |
 |---|---|---|---|
 | `array` | required | the array to fold | an empty array gives the identity of the ufunc: 0 for `np.add` |
-| `axis` | `0` | the axis to fold along. With `None`, all axes | the default is 0, and `np.sum` has `None`. On a 2-D array the two give `[3 5 7]` and `15` |
+| `axis` | `0` | the axis to fold along. With `None`, all axes | the default is 0, and `np.sum` has `None`. On the array of the next block the two give `[ 4  6 13]` and `23` |
 | `dtype` | `None` | the type of the running total | — |
 | `out` | `None` | an array to write the result into | — |
+| `**kwargs` | — | `keepdims`, `initial` and `where`, by name. They do what they do for `np.sum` | any other name raises `TypeError` |
 
 #### `np.add.accumulate`
 
@@ -94,6 +98,7 @@ The method applies the ufunc to every pair of one element of `A` and one element
 | parameter | default | what it does | what goes wrong |
 |---|---|---|---|
 | `A`, `B` | required | the two inputs | the result has `A.ndim + B.ndim` axes, and a large pair makes a large array |
+| `**kwargs` | — | the keyword arguments of the ufunc, such as `out`, `dtype` and `where` | — |
 
 The call `np.add.reduce(x)` is `x.sum()`. It folds the array to one value. The call `np.add.accumulate(x)` is `np.cumsum(x)`. It keeps every partial result. The call `np.maximum.accumulate(x)` gives the running maximum, which has no special name in NumPy. The call `np.multiply.outer` gives every product of a pair, which is the broadcast of chapter 5 written as a method.
 
@@ -106,11 +111,14 @@ Every reduction takes `axis`, which can be an integer or a tuple. It takes `keep
 ```python
 import numpy as np
 
-m = np.arange(6).reshape(2, 3)
+m = np.array([[3, 1, 4],
+              [1, 5, 9]])
 print("axis 0      :", m.sum(axis=0))
 print("axis 1      :", m.sum(axis=1))
 print("axes (0, 1) :", m.sum(axis=(0, 1)))
 print("keepdims    :", m.sum(axis=1, keepdims=True).shape)
+print("np.add.reduce(m):", np.add.reduce(m))
+print("np.sum(m)       :", np.sum(m))
 
 y = np.array([1.0, -1.0, 4.0])
 out = np.full(3, np.nan)
@@ -119,10 +127,12 @@ print("sqrt with where:", out)
 ```
 
 ```text
-axis 0      : [3 5 7]
-axis 1      : [ 3 12]
-axes (0, 1) : 15
+axis 0      : [ 4  6 13]
+axis 1      : [ 8 15]
+axes (0, 1) : 23
 keepdims    : (2, 1)
+np.add.reduce(m): [ 4  6 13]
+np.sum(m)       : 23
 sqrt with where: [ 1. nan  2.]
 ```
 
@@ -158,6 +168,10 @@ The function adds the values of an array and treats `nan` as 0. It takes the sam
 | `a` | required | the array | an array of only `nan` gives `0.0`, which looks like a real sum |
 | `axis` | `None` | the axis to add along | — |
 | `dtype` | `None` | the type of the running total | — |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
+| `keepdims` | `<no value>` | with `True`, the reduced axes stay with length 1 | — |
+| `initial` | `<no value>` | a start value for the sum | an array of only `nan` with `initial=5` gives `5.0` |
+| `where` | `<no value>` | a boolean array. Only the values where it is `True` are added | — |
 
 The `nan` functions skip the missing values. Use them with intent. A silent `nansum` on a column that is mostly `nan` gives a number, and the number is a sum of very few values.
 
@@ -248,6 +262,9 @@ The class wraps a Python function so that it accepts arrays. It calls the functi
 |---|---|---|---|
 | `pyfunc` | `<no value>` | the Python function to wrap | it is called in a Python loop, so the speed is the speed of a loop |
 | `otypes` | `None` | the output types. Without it, NumPy takes the type of the first result | `0 if v < 1 else v` on `[0.5, 2.7]` gives `[0 2]`, because the first result is an integer |
+| `doc` | `None` | the docstring of the new object. With `None`, the docstring of `pyfunc` | — |
+| `excluded` | `None` | a set of positions or names of arguments that are passed to `pyfunc` unchanged | without it, a list argument is split into its elements: `f(x, c)` with `c=[10, 20]` gets `10`, then `20`, and not the list |
+| `cache` | `False` | with `True`, the call that finds the output type is kept, so `pyfunc` runs once on each element | without `otypes` and without `cache`, `pyfunc` runs twice on the first element. A function with side effects shows it |
 | `signature` | `None` | a generalized signature such as `(n),(n)->()` for a function of arrays | a wrong signature raises `ValueError` at the call |
 
 In the run above, the `np.vectorize` call was slower than the list comprehension that it replaces. The assert proves only that it is not more than 2 times faster. The assert also proves that the real vectorized form, with `np.where`, is more than 5 times faster than the loop. Use `np.vectorize` to make a Python function accept arrays in a place where speed does not matter. Do not use it to go faster.
@@ -312,6 +329,7 @@ The function returns a read-only view in which each row is one window of the inp
 | `x` | required | the array | — |
 | `window_shape` | required | the length of the window, or a tuple of lengths | a window longer than the input raises `ValueError` |
 | `axis` | `None` | the axis or axes to slide along | with `None`, the window slides over all axes, and `window_shape` must have one length for each |
+| `subok` | `False` | with `True`, a subclass of `ndarray`, such as a masked array, stays that subclass | with `False`, a masked array loses its mask, and the hidden values appear in the windows |
 | `writeable` | `False` | with `True`, writes are allowed | a write changes every window that holds that position |
 
 #### `np.convolve`

@@ -20,111 +20,36 @@ An array has three attributes that fix its layout.
 - `dtype` is the type of each value. It fixes the size of one value in bytes, which is `itemsize`.
 - `strides` is a tuple with the number of bytes to jump to move one step along each axis.
 
-Make a 3-by-4 array of 32-bit integers and print the three attributes.
+Build a 2-by-3 array of integers from a nested list, and print the attributes. The values are not 0, 1, 2 and so on, so that you can tell a value from a position.
 
 ```python
 import numpy as np
 
-a = np.arange(12, dtype=np.int32).reshape(3, 4)
+a = np.array([[3, 1, 4],
+              [1, 5, 9]])
 print(a)
 print("shape   ", a.shape)
+print("dtype   ", a.dtype)
 print("itemsize", a.itemsize)
 print("strides ", a.strides)
 print("nbytes  ", a.nbytes)
 ```
 
 ```text
-[[ 0  1  2  3]
- [ 4  5  6  7]
- [ 8  9 10 11]]
-shape    (3, 4)
-itemsize 4
-strides  (16, 4)
+[[3 1 4]
+ [1 5 9]]
+shape    (2, 3)
+dtype    int64
+itemsize 8
+strides  (24, 8)
 nbytes   48
 ```
 
-Read the strides as a rule. To move one column to the right, jump 4 bytes, which is one `int32`. To move one row down, jump 16 bytes, which is 4 values of 4 bytes. The array has 12 values of 4 bytes each, so `nbytes` is 48.
+Read the strides as a rule. NumPy chose `int64`, the default integer type on this machine, so each value uses 8 bytes. To move one column to the right, jump 8 bytes, which is one value. To move one row down, jump 24 bytes, which is 3 values of 8 bytes. The array has 6 values of 8 bytes each, so `nbytes` is 48.
 
-The address of the value at row `i` and column `j` is therefore the start of the block plus `i * 16 + j * 4`. There is no other rule. Slicing, transposing and reshaping all work the same way. They change these numbers and do not touch the block.
+The address of the value at row `i` and column `j` is therefore the start of the block plus `i * 24 + j * 8`. There is no other rule. Slicing, transposing and reshaping all work the same way. They change these numbers and do not touch the block.
 
-The function `np.arange` made the values of this array. Its signature and parameters follow.
-
-#### `np.arange`
-
-```text
-np.arange(start_or_stop, /, stop=None, step=1, *, dtype=None, device=None, like=None)
-```
-
-The function returns an array of evenly spaced values. It has the same role as the Python `range`, and it accepts floats.
-
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `start_or_stop` | required | with one argument, the stop value and the start is 0. With two, the start | — |
-| `stop` | `None` | the end of the range. The documented intent is that it is not included | for float steps the last value can be above it (next section) |
-| `step` | `1` | the distance between values. A negative step counts down | a float step gives a count that depends on rounding |
-| `dtype` | `None` | the type of each value. With `None`, NumPy takes an integer type if all arguments are integers, and `float64` if not | a range that is too large for the dtype wraps without an error: 300 values in `int8` end at 43 |
-| `device`, `like` | — | for use with other array libraries | — |
-
-The last row is a short form: both parameters have the default `None`, and you leave them unset.
-
-## Making arrays
-
-Three more functions make most of the arrays that you need. Each gives the shape and the dtype that you ask for, and nothing else.
-
-#### `np.zeros`
-
-```text
-np.zeros(shape, dtype=None, order='C', *, device=None, like=None)
-```
-
-The function returns a new array of the given shape, filled with zeros. Its relatives `np.ones`, `np.full` and `np.empty` take the same first arguments. The function `np.empty` does not set the values, so the block holds whatever was in that memory before. Never read an array from `np.empty` before you write to it.
-
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `shape` | required | an integer or a tuple of integers. The value `3` gives 3 values. The value `(2, 3)` gives 2 rows of 3 | a bare `2, 3` is an error: the second number is taken as the dtype |
-| `dtype` | `None` | the type of each value. With `None`, the type is `float64` | the default is a float, not an integer |
-| `order` | `'C'` | `'C'` puts the last axis in consecutive memory, `'F'` puts the first axis there | — |
-
-#### `np.linspace`
-
-```text
-np.linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None, axis=0, *, device=None)
-```
-
-The function returns `num` values that are evenly spaced between `start` and `stop`. Use it when you know how many values you want. Use `np.arange` when you know the step.
-
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `start`, `stop` | required | the first value and the last value of the range | — |
-| `num` | `50` | the number of values | — |
-| `endpoint` | `True` | with `False`, the range does not include `stop`, and the step is `(stop - start) / num` | the step changes when you switch it |
-| `retstep` | `False` | with `True`, the function returns the pair `(array, step)` | the result is a tuple, not an array |
-| `dtype` | `None` | the type of the result. With `None`, a float | an integer dtype truncates the values |
-
-The two functions differ in one important way. The step of `np.arange` is given, and the count is computed from floats. The count of `np.linspace` is given, and the step is computed.
-
-```python
-import numpy as np
-
-r = np.arange(1, 1.3, 0.1)
-print("arange(1, 1.3, 0.1) has", len(r), "values")
-print("last value:", r[-1], "and the stop was 1.3")
-print("last value is above the stop:", r[-1] > 1.3)
-print("quotient (stop - start) / step:", (1.3 - 1) / 0.1)
-
-s = np.linspace(1, 1.3, 4)
-print("linspace(1, 1.3, 4):", s)
-```
-
-```text
-arange(1, 1.3, 0.1) has 4 values
-last value: 1.3000000000000003 and the stop was 1.3
-last value is above the stop: True
-quotient (stop - start) / step: 3.0000000000000004
-linspace(1, 1.3, 4): [1.  1.1 1.2 1.3]
-```
-
-The range `1` to `1.3` with step `0.1` has the quotient `(1.3 - 1) / 0.1`. In floats this is 3.0000000000000004, and NumPy rounds up. It makes 4 values, and the last one is larger than the stop. When you need a known number of values, use `np.linspace`.
+The function `np.array` built this array from the nested list. Its signature and parameters follow.
 
 #### `np.array`
 
@@ -137,10 +62,13 @@ The function builds an array from Python objects. It is the usual way to enter d
 | parameter | default | what it does | what goes wrong |
 |---|---|---|---|
 | `object` | required | a list, a tuple, a number or another array. Equal-length nested lists make a 2-D array | unequal rows are an error in NumPy 2 |
-| `dtype` | `None` | the type of each value. With `None`, NumPy takes the smallest type that holds all the values | a mix of numbers and text becomes text |
+| `dtype` | `None` | the type of each value. With `None`, NumPy takes the default type for the values: `int64` for integers and `float64` for floats. A mix gets the type that holds both | a mix of numbers and text becomes text |
 | `copy` | `True` | `True` always copies. `None` copies only when needed. `False` raises an error if a copy cannot be avoided | `True` costs memory for a large input |
 | `order` | `'K'` | the memory order of the result. `'K'` keeps the order of the input | — |
+| `subok` | `False` | with `False`, the result is always a plain `ndarray`. With `True`, a subclass of `ndarray` in the input, such as a masked array from `np.ma.array`, stays that subclass | with `False`, a masked array loses its mask: the values that were hidden come back |
 | `ndmin` | `0` | the least number of axes. NumPy puts length-1 axes on the left to reach it | — |
+| `ndmax` | `0` | the largest number of axes that NumPy makes from nested lists. `0` means no limit. With `ndmax=1` and `dtype=object`, a list of two lists becomes 2 values, each a list | without `dtype=object`, a list that is deeper than `ndmax` raises `ValueError` |
+| `like` | `None` | an array of another array library. The result is then an array of that library. With `None`, a NumPy array | a value that is not such an array, for example a list, raises `TypeError` |
 
 The function picks the dtype for you, and sometimes the choice is not the one that you expect.
 
@@ -168,6 +96,86 @@ ValueError: setting an array element with a sequence
 
 A mix of an integer and a string becomes an array of strings, `<U21`, and the number 1 becomes the text `'1'`. A list of unequal rows is an error in NumPy 2. NumPy 1.x made an array of objects for the same call. Check the dtype of any array that you build from mixed data.
 
+## Making arrays
+
+Three more functions make most of the arrays that you need. Each gives the shape and the dtype that you ask for, and nothing else. The first one makes a range of values.
+
+#### `np.arange`
+
+```text
+np.arange(start_or_stop, /, stop=None, step=1, *, dtype=None, device=None, like=None)
+```
+
+The function returns an array of evenly spaced values. It has the same role as the Python `range`, and it accepts floats.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `start_or_stop` | required | with one argument, the stop value and the start is 0. With two, the start | — |
+| `stop` | `None` | the end of the range. The documented intent is that it is not included | for float steps the last value can be above it (see the example under `np.linspace`) |
+| `step` | `1` | the distance between values. A negative step counts down | a float step gives a count that depends on rounding |
+| `dtype` | `None` | the type of each value. With `None`, NumPy takes an integer type if all arguments are integers, and `float64` if not | a range that is too large for the dtype wraps without an error: 300 values in `int8` end at 43 |
+| `device` | `None` | the device that holds the result, for code that also runs on other array libraries. NumPy accepts only `'cpu'` | any other value, for example `'cuda'`, raises `ValueError` |
+| `like` | `None` | an array of another array library. The result is then an array of that library. With `None`, a NumPy array | a value that is not such an array, for example a list, raises `TypeError` |
+
+#### `np.zeros`
+
+```text
+np.zeros(shape, dtype=None, order='C', *, device=None, like=None)
+```
+
+The function returns a new array of the given shape, filled with zeros. Its relatives `np.ones`, `np.full` and `np.empty` take the same first arguments. The function `np.empty` does not set the values, so the block holds whatever was in that memory before. Never read an array from `np.empty` before you write to it.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `shape` | required | an integer or a tuple of integers. The value `3` gives 3 values. The value `(2, 3)` gives 2 rows of 3 | a bare `2, 3` is an error: the second number is taken as the dtype |
+| `dtype` | `None` | the type of each value. With `None`, the type is `float64` | the default is a float, not an integer |
+| `order` | `'C'` | `'C'` puts the last axis in consecutive memory, `'F'` puts the first axis there | — |
+| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
+| `like` | `None` | an array of another array library. The result is then an array of that library | a list raises `TypeError` |
+
+#### `np.linspace`
+
+```text
+np.linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None, axis=0, *, device=None)
+```
+
+The function returns `num` values that are evenly spaced between `start` and `stop`. Use it when you know how many values you want. Use `np.arange` when you know the step.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `start`, `stop` | required | the first value and the last value of the range | — |
+| `num` | `50` | the number of values | — |
+| `endpoint` | `True` | with `False`, the range does not include `stop`, and the step is `(stop - start) / num` | the step changes when you switch it |
+| `retstep` | `False` | with `True`, the function returns the pair `(array, step)` | the result is a tuple, not an array |
+| `dtype` | `None` | the type of the result. With `None`, a float | an integer dtype truncates the values |
+| `axis` | `0` | the axis of the result that holds the samples, when `start` and `stop` are arrays. For `start=[0, 0]`, `stop=[1, 10]` and `num=3`, the result has shape `(3, 2)`, and with `axis=1` it has shape `(2, 3)` | with numbers for `start` and `stop`, the result has one axis, and `axis=1` raises `AxisError` |
+| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
+
+The two functions differ in one important way. The step of `np.arange` is given, and the count is computed from floats. The count of `np.linspace` is given, and the step is computed.
+
+```python
+import numpy as np
+
+r = np.arange(1, 1.3, 0.1)
+print("arange(1, 1.3, 0.1) has", len(r), "values")
+print("last value:", r[-1], "and the stop was 1.3")
+print("last value is above the stop:", r[-1] > 1.3)
+print("quotient (stop - start) / step:", (1.3 - 1) / 0.1)
+
+s = np.linspace(1, 1.3, 4)
+print("linspace(1, 1.3, 4):", s)
+```
+
+```text
+arange(1, 1.3, 0.1) has 4 values
+last value: 1.3000000000000003 and the stop was 1.3
+last value is above the stop: True
+quotient (stop - start) / step: 3.0000000000000004
+linspace(1, 1.3, 4): [1.  1.1 1.2 1.3]
+```
+
+The range `1` to `1.3` with step `0.1` has the quotient `(1.3 - 1) / 0.1`. In floats this is 3.0000000000000004, and NumPy rounds up. It makes 4 values, and the last one is larger than the stop. When you need a known number of values, use `np.linspace`.
+
 ## A transpose copies nothing
 
 Transpose the array and print its layout again.
@@ -175,7 +183,8 @@ Transpose the array and print its layout again.
 ```python
 import numpy as np
 
-a = np.arange(12, dtype=np.int32).reshape(3, 4)
+a = np.array([[3, 1, 4],
+              [1, 5, 9]])
 b = a.T
 print("a strides", a.strides, "shape", a.shape)
 print("b strides", b.strides, "shape", b.shape)
@@ -184,13 +193,13 @@ print("b is C-contiguous:", b.flags.c_contiguous)
 ```
 
 ```text
-a strides (16, 4) shape (3, 4)
-b strides (4, 16) shape (4, 3)
+a strides (24, 8) shape (2, 3)
+b strides (8, 24) shape (3, 2)
 same memory: True
 b is C-contiguous: False
 ```
 
-The shape went from `(3, 4)` to `(4, 3)`, and the strides swapped from `(16, 4)` to `(4, 16)`. The 48 bytes did not move. The function `np.shares_memory` confirms that `a` and `b` read the same block.
+The shape went from `(2, 3)` to `(3, 2)`, and the strides swapped from `(24, 8)` to `(8, 24)`. The 48 bytes did not move. The function `np.shares_memory` confirms that `a` and `b` read the same block.
 
 #### `np.shares_memory`
 
@@ -205,7 +214,7 @@ The function returns `True` if the two arrays have at least one byte of memory i
 | `a`, `b` | required | the two arrays to compare | — |
 | `max_work` | `-1` | how much effort to spend. `-1` solves the problem exactly. `0` compares only the first and last byte of each array | the exact answer can take very long for complex strides |
 
-The last line of the block above shows the price of a transpose. A C-contiguous array has its last axis in consecutive memory, so a walk along the last axis reads memory in order. The transpose does not have this property. A loop over its last axis jumps 16 bytes at each step. Chapter 3 measures what that costs.
+The last line of the block above shows the price of a transpose. A C-contiguous array has its last axis in consecutive memory, so a walk along the last axis reads memory in order. The transpose does not have this property. A loop over its last axis jumps 24 bytes at each step. Chapter 3 measures what that costs.
 
 ## The function you build
 
@@ -222,16 +231,19 @@ def describe(a: np.ndarray) -> str:
             f"c_contiguous={a.flags.c_contiguous} owns={a.flags.owndata}")
 
 
-a = np.arange(12, dtype=np.int32).reshape(3, 4)
+a = np.array([[3, 1, 4],
+              [1, 5, 9]])
 print(describe(a))
 print(describe(a.T))
 print(describe(a[:, ::2]))
+print(describe(np.arange(6).reshape(2, 3)))
 ```
 
 ```text
-shape=(3, 4) dtype=int32 itemsize=4 strides=(16, 4) nbytes=48 c_contiguous=True owns=False
-shape=(4, 3) dtype=int32 itemsize=4 strides=(4, 16) nbytes=48 c_contiguous=False owns=False
-shape=(3, 2) dtype=int32 itemsize=4 strides=(16, 8) nbytes=24 c_contiguous=False owns=False
+shape=(2, 3) dtype=int64 itemsize=8 strides=(24, 8) nbytes=48 c_contiguous=True owns=True
+shape=(3, 2) dtype=int64 itemsize=8 strides=(8, 24) nbytes=48 c_contiguous=False owns=False
+shape=(2, 2) dtype=int64 itemsize=8 strides=(24, 16) nbytes=32 c_contiguous=False owns=False
+shape=(2, 3) dtype=int64 itemsize=8 strides=(24, 8) nbytes=48 c_contiguous=True owns=False
 ```
 
 #### `describe`
@@ -246,9 +258,9 @@ The function reads attributes only, and it never copies the array.
 |---|---|---|---|
 | `a` | required | any `ndarray`, of any shape and dtype | a Python list has no `.shape`, so the call raises `AttributeError` |
 
-The `owns` field is `True` when the array owns its block. It is `False` when the array only looks at the block of another array. The slice `a[:, ::2]` takes every second column. It has strides `(16, 8)`, so it reads the same block with a step of 8 bytes.
+The `owns` field is `True` when the array owns its block. It is `False` when the array only looks at the block of another array. The first line shows an array that owns its block. The transpose and the slice read the block of `a`, so their `owns` is `False`. The slice `a[:, ::2]` takes every second column. It has strides `(24, 16)`, so it reads the same block with a step of 16 bytes.
 
-The first line is a surprise. The array `a` itself has `owns=False`. The call `np.arange(12)` made the block, and `reshape` returned a new view of that block. The variable `a` is a view, and the block belongs to an array that no name points to. Chapter 3 shows why this matters.
+The last line shows a case that you can find surprising. The call `np.arange(6)` made the block, and `reshape` returned a new view of that block. The result owns nothing, and the block belongs to an array that no name points to. A chain such as `np.arange(12).reshape(3, 4)` makes this case, so you will meet it. Chapter 3 shows why it matters.
 
 ## Why a sum over an array is fast
 
@@ -337,31 +349,32 @@ The list wins for three values. Use NumPy when you have thousands of values or m
 
 Everything above follows from one fact: the array is a block of bytes and three attributes that say how to read it. This section opens the block and checks each claim against the bytes.
 
-An array of four 16-bit integers is eight bytes in a row.
+An array of four 16-bit integers is eight bytes in a row. The block uses 16-bit integers only to keep the output short. One value is above 255, so you can see how a value fills two bytes.
 
 ```python
 import numpy as np
 
-a = np.arange(4, dtype=np.int16)
+a = np.array([1, 2, 3, 300], dtype=np.int16)
 print(a.tobytes())
 print(list(a.tobytes()))
 ```
 
 ```text
-b'\x00\x00\x01\x00\x02\x00\x03\x00'
-[0, 0, 1, 0, 2, 0, 3, 0]
+b'\x01\x00\x02\x00\x03\x00,\x01'
+[1, 0, 2, 0, 3, 0, 44, 1]
 ```
 
-Each integer uses two bytes, and the low byte comes first. This is the little-endian order of most computers. The block has no header, no length and no type. The array object holds those facts separately, and `strides` is how it finds a value in the block.
+Each integer uses two bytes, and the low byte comes first. The value 300 is 44 + 1 × 256, so its bytes are 44 and then 1. This is the little-endian order of most computers. The block has no header, no length and no type. The array object holds those facts separately, and `strides` is how it finds a value in the block.
 
-The rule for the address is general. For the index `(i0, i1, ..., ik)`, the byte offset is the sum of `i_n * strides[n]`. The next block tests this rule on a 3-axis array. It reads every value from the raw bytes with the formula, and compares it with the value that NumPy returns.
+The rule for the address is general. For the index `(i0, i1, ..., ik)`, the byte offset is the sum of `i_n * strides[n]`. The next block tests this rule on a 3-axis array of 24 integers. It reads every value from the raw bytes with the formula, and compares it with the value that NumPy returns.
 
 ```python
 import itertools
 
 import numpy as np
 
-a = np.arange(24, dtype=np.int16).reshape(2, 3, 4)
+a = np.array([[[3, 1, 4, 1], [5, 9, 2, 6], [5, 3, 5, 8]],
+              [[9, 7, 9, 3], [2, 3, 8, 4], [6, 2, 6, 4]]])
 raw = a.tobytes()
 
 
@@ -377,19 +390,20 @@ print("all equal:", all(read_at(ix) == a[ix] for ix in every))
 ```
 
 ```text
-strides: (24, 8, 2)
+strides: (96, 32, 8)
 values checked: 24
 all equal: True
 ```
 
-The strides come from the shape. The last axis has stride 2, which is the item size. Each earlier stride is the next stride times the next length: 2 × 4 = 8, and 8 × 3 = 24. This is C order, also called row-major order. In C order, the last axis changes fastest in memory.
+The strides come from the shape. The last axis has stride 8, which is the item size. Each earlier stride is the next stride times the next length: 8 × 4 = 32, and 32 × 3 = 96. This is C order, also called row-major order. In C order, the last axis changes fastest in memory.
 
-The other common order is Fortran order, or column-major order. The first axis changes fastest. NumPy can hold the same values in either order, and only the strides differ.
+The other common order is Fortran order, or column-major order. The first axis changes fastest. NumPy can hold the same values in either order, and only the strides differ. The function `np.asfortranarray` returns a copy in Fortran order. The function `np.array_equal` tests that two arrays have the same shape and the same values.
 
 ```python
 import numpy as np
 
-c = np.arange(24, dtype=np.int16).reshape(2, 3, 4)
+c = np.array([[[3, 1, 4, 1], [5, 9, 2, 6], [5, 3, 5, 8]],
+              [[9, 7, 9, 3], [2, 3, 8, 4], [6, 2, 6, 4]]])
 f = np.asfortranarray(c)
 
 print("C strides:", c.strides, "C-contiguous:", c.flags.c_contiguous)
@@ -399,13 +413,13 @@ print("same memory:", np.shares_memory(c, f))
 ```
 
 ```text
-C strides: (24, 8, 2) C-contiguous: True
-F strides: (2, 4, 12) F-contiguous: True
+C strides: (96, 32, 8) C-contiguous: True
+F strides: (8, 16, 48) F-contiguous: True
 same values: True
 same memory: False
 ```
 
-The Fortran strides `(2, 4, 12)` run the other way: 2, then 2 × 2 = 4, then 4 × 3 = 12. The two arrays hold equal values in two blocks, so `asfortranarray` made a copy.
+The Fortran strides `(8, 16, 48)` run the other way: 8, then 8 × 2 = 16, then 16 × 3 = 48. The two arrays hold equal values in two blocks, so `asfortranarray` made a copy.
 
 **The invariant.** The byte offset of an element is always the sum of index times stride, for any shape, any order and any view. A test of this is the block above.
 
@@ -415,10 +429,10 @@ The Fortran strides `(2, 4, 12)` run the other way: 2, then 2 × 2 = 4, then 4 �
 
 | Callable | Introduced in | Contract |
 |---|---|---|
-| `np.arange` | The description: shape, dtype, strides | evenly spaced values, with a given step |
+| `np.array` | The description: shape, dtype, strides | an array from Python objects |
+| `np.arange` | Making arrays | evenly spaced values, with a given step |
 | `np.zeros` | Making arrays | an array of zeros of a given shape and dtype |
 | `np.linspace` | Making arrays | a given count of evenly spaced values |
-| `np.array` | Making arrays | an array from Python objects |
 | `np.shares_memory` | A transpose copies nothing | exact test for a shared byte |
 | `describe` | The function you build | one line with the layout of an array |
 

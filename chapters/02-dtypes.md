@@ -79,6 +79,7 @@ The method returns a copy of the array with another dtype. It is the tool that c
 | `dtype` | required | the new type | a narrower integer type wraps the values: 300 becomes 44 |
 | `order` | `'K'` | the memory order of the result. `'K'` keeps the order of the input | — |
 | `casting` | `'unsafe'` | which casts are allowed. `'safe'` allows only casts that cannot lose a value | with `'unsafe'` nothing stops 300 from becoming 44. With `'safe'` the call raises `TypeError` |
+| `subok` | `True` | with `True`, a subclass of `ndarray`, such as a masked array, stays that subclass. With `False`, the result is a plain `ndarray` | with `False`, a masked array loses its mask |
 | `copy` | `True` | with `False`, the method returns the same array when the dtype already matches | with `True` the call always makes a new block |
 
 The `casting` parameter is the guard. The call `np.array([300]).astype(np.uint8, casting='safe')` raises `TypeError: Cannot cast array data from dtype('int64') to dtype('uint8') according to the rule 'safe'`.
@@ -201,7 +202,10 @@ The function adds the values of an array along an axis. The method `a.sum(...)` 
 | `a` | required | the array to add | — |
 | `axis` | `None` | the axis to add along. `None` adds all values. A tuple adds along several axes | — |
 | `dtype` | `None` | the type of the running total. With `None`, an integer input smaller than the platform integer uses `int64` | `dtype=np.int8` on the values above gives 91 and not 347, with no warning |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | a wrong shape raises `ValueError` |
 | `keepdims` | `<no value>` | with `True`, the reduced axes stay with length 1 | the shape of the result changes, and broadcasting differs |
+| `initial` | `<no value>` | a start value for the sum. With `<no value>`, the start is 0 | it is added once to each value of the result: on `[[1, 2], [3, 4]]` with `axis=1`, `initial=10` gives `[13 17]` |
+| `where` | `<no value>` | a boolean array. Only the values where it is `True` are added. With `<no value>`, all values | if no value is `True`, the result is 0 and there is no warning |
 
 This default is a protection and also a trap. The sum of a `uint8` image is safe. The sum of a `float32` array stays `float32`, and the next section shows that this is not safe.
 
@@ -226,6 +230,20 @@ float64 epsilon: 2.220446049250313e-16
 ```
 
 The `eps` value is the gap between 1.0 and the next float. For `float32` it is about 1.2e-7, so you get about 7 correct decimal digits. For `float64` you get about 15 or 16.
+
+The `eps` value comes from `np.finfo`. Its signature follows.
+
+#### `np.finfo`
+
+```text
+np.finfo(dtype)
+```
+
+The class returns the limits of a float type. The attributes `eps`, `max`, `tiny` and `bits` describe it.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `dtype` | required | a float dtype, a dtype name or a float array | an integer dtype raises `ValueError`. Use `np.iinfo` for integers |
 
 Now the practical case. Add ten million copies of 0.1 in `float32`. The exact answer is 1,000,000.015, because `float32(0.1)` is a little more than 0.1. Compare three ways to add.
 
@@ -254,19 +272,7 @@ The NumPy documentation says that `x.sum()` adds in pairs. It adds neighbors fir
 
 A pure Python loop has the same fault as `cumsum`. Chapter 6 uses this fact when it builds a moving average.
 
-Two more functions show the limits of a `float32` and the cure for the running sum.
-
-#### `np.finfo`
-
-```text
-np.finfo(dtype)
-```
-
-The class returns the limits of a float type. The attributes `eps`, `max`, `tiny` and `bits` describe it.
-
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `dtype` | required | a float dtype, a dtype name or a float array | an integer dtype raises `ValueError`. Use `np.iinfo` for integers |
+The function `np.cumsum` is the other tool of this section. Its signature follows.
 
 #### `np.cumsum`
 
@@ -281,6 +287,7 @@ The function returns the running total of an array. Every partial sum is in the 
 | `a` | required | the array to add | — |
 | `axis` | `None` | the axis to add along. With `None`, the array is flattened first | a 2-D input becomes a 1-D result |
 | `dtype` | `None` | the type of the running total and of the result | for ten million `float32` values of 0.1, the default is wrong by 8.8 percent, and `np.float64` gives 0.0 percent |
+| `out` | `None` | an array to write the result into. It must have the size of the result | a wrong size raises `ValueError` |
 
 ## Mixed dtypes: which one wins
 

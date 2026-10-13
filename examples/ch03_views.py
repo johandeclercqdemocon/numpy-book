@@ -16,7 +16,9 @@ def best(f, repeat: int = 3) -> float:
 
 
 def main() -> None:
-    a = np.arange(12).reshape(3, 4)
+    a = np.array([[3, 1, 4, 1],
+                  [5, 9, 2, 6],
+                  [5, 3, 5, 8]])
     view, fancy, masked = a[:, 1:3], a[[0, 2]], a[a > 5]
     assert np.shares_memory(a, view)
     assert not np.shares_memory(a, fancy)

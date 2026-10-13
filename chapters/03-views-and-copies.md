@@ -19,7 +19,9 @@ Basic slicing makes a view. Indexing with a list of integers or with a boolean m
 ```python
 import numpy as np
 
-a = np.arange(12).reshape(3, 4)
+a = np.array([[3, 1, 4, 1],
+              [5, 9, 2, 6],
+              [5, 3, 5, 8]])
 view = a[:, 1:3]       # basic slice
 fancy = a[[0, 2]]      # list of integers
 masked = a[a > 5]      # boolean mask
@@ -42,14 +44,16 @@ A write through a view changes the original.
 ```python
 import numpy as np
 
-a = np.arange(12).reshape(3, 4)
+a = np.array([[3, 1, 4, 1],
+              [5, 9, 2, 6],
+              [5, 3, 5, 8]])
 view = a[:, 1:3]
 view[0, 0] = -1
 print(a[0])
 ```
 
 ```text
-[ 0 -1  2  3]
+[ 3 -1  4  1]
 ```
 
 The value at `a[0, 1]` is now −1, although the code never wrote to `a`.
@@ -69,7 +73,9 @@ def root(a: np.ndarray) -> np.ndarray:
     return a
 
 
-a = np.arange(12).reshape(3, 4)
+a = np.array([[3, 1, 4, 1],
+              [5, 9, 2, 6],
+              [5, 3, 5, 8]])
 b = a[1:]
 c = b[:, 1:]
 d = c[[0]]
@@ -116,6 +122,19 @@ shares_memory:    False
 
 The function `np.may_share_memory` compares only the first and last byte that each array covers. The two interleaved slices cover the same range, so it says yes. The function `np.shares_memory` solves the exact problem and says no. The exact function can be slow for complex strides.
 
+#### `np.may_share_memory`
+
+```text
+np.may_share_memory(a, b, /, max_work=0)
+```
+
+The function is the quick version of `np.shares_memory`. It tests only whether the memory ranges of the two arrays overlap.
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a`, `b` | required | the two arrays to compare | — |
+| `max_work` | `0` | the effort. `0` compares only the first and last byte of each array | the interleaved slices `a[::2]` and `a[1::2]` give `True`, and `np.shares_memory` gives `False` |
+
 The quick function can say yes when the exact answer is no. The next block tests the other direction on 5000 random pairs of slices: does the quick function ever say no when the exact answer is yes?
 
 ```python
@@ -154,19 +173,6 @@ quick says no, exact says yes:    0
 ```
 
 The third count is 0, as the documentation promises. A `False` from the quick function is certain. A `True` is not.
-
-#### `np.may_share_memory`
-
-```text
-np.may_share_memory(a, b, /, max_work=0)
-```
-
-The function is the quick version of `np.shares_memory`. It tests only whether the memory ranges of the two arrays overlap.
-
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a`, `b` | required | the two arrays to compare | — |
-| `max_work` | `0` | the effort. `0` compares only the first and last byte of each array | the interleaved slices `a[::2]` and `a[1::2]` give `True`, and `np.shares_memory` gives `False` |
 
 ## Bug 1: a function that changes its argument
 
@@ -280,6 +286,7 @@ The function returns an array in C order. It copies only when the input is not a
 |---|---|---|---|
 | `a` | required | any array or array-like | for an input that is already contiguous, the result is the input itself, and a write reaches the original |
 | `dtype` | `None` | the type of the result. With `None`, the dtype of the input | — |
+| `like` | `None` | an array of another array library. The result is then an array of that library | a list raises `TypeError` |
 
 The rule that follows has two parts. Use the built-in reduction when one exists. When you must loop in Python, loop over the first axis, so that each step reads one consecutive row.
 
@@ -297,7 +304,7 @@ The method returns an array with the same values and a new shape. It returns a v
 
 | parameter | default | what it does | what goes wrong |
 |---|---|---|---|
-| `shape` | required | the new shape, as a tuple or as separate integers. One length can be `-1`, and NumPy computes it | the product of the new lengths must equal the size, or the call raises `ValueError` |
+| `*shape` | — | the new shape, as a tuple or as separate integers. One length can be `-1`, and NumPy computes it | the product of the new lengths must equal the size, or the call raises `ValueError` |
 | `order` | `'C'` | the order in which values are read and placed. `'C'` means that the last axis changes fastest | `'F'` on a C array reorders the values, and it can force a copy |
 | `copy` | `None` | `None` gives a view when possible and a copy when not. `True` always copies. `False` raises `ValueError` if a copy cannot be avoided | with `None` you do not know if a later write reaches the original. With `False` the transposed case raises `Unable to avoid creating a copy while reshaping.` |
 
@@ -311,14 +318,16 @@ The method returns a new array with its own block.
 
 | parameter | default | what it does | what goes wrong |
 |---|---|---|---|
-| `order` | `'C'` | the memory order of the copy. `'F'` is Fortran order. `'A'` is the order of the input. `'K'` is as close to the input as possible | the function `np.copy` has the default `'K'`, so `a.T.copy()` has strides `(16, 8)` and `np.copy(a.T)` has strides `(8, 24)` for the array in the next block |
+| `order` | `'C'` | the memory order of the copy. `'F'` is Fortran order. `'A'` is the order of the input. `'K'` is as close to the input as possible | the function `np.copy` has the default `'K'`, so `a.T.copy()` has strides `(24, 8)` and `np.copy(a.T)` has strides `(8, 32)` for the array in the next block |
 
 The code below tests each line of the summary table that follows. It raises an error if one line is wrong.
 
 ```python
 import numpy as np
 
-a = np.arange(12).reshape(3, 4)
+a = np.array([[3, 1, 4, 1],
+              [5, 9, 2, 6],
+              [5, 3, 5, 8]])
 t = a.T
 rows = {
     "a[1:3]":            (a[1:3], True),
@@ -334,6 +343,8 @@ rows = {
     "a.copy()":          (a.copy(), False),
     "np.array(a)":       (np.array(a), False),
 }
+print("a.T.copy() strides:", a.T.copy().strides)
+print("np.copy(a.T) strides:", np.copy(a.T).strides)
 for name, (result, expected) in rows.items():
     shared = np.shares_memory(a, result)
     assert shared == expected, name
@@ -341,6 +352,8 @@ for name, (result, expected) in rows.items():
 ```
 
 ```text
+a.T.copy() strides: (24, 8)
+np.copy(a.T) strides: (8, 32)
 a[1:3]             view
 a[:, ::2]          view
 a.T                view
@@ -396,7 +409,9 @@ The flags show what the object knows about its block. The `OWNDATA` flag tells w
 ```python
 import numpy as np
 
-a = np.arange(12, dtype=np.int32).reshape(3, 4)
+a = np.array([[3, 1, 4, 1],
+              [5, 9, 2, 6],
+              [5, 3, 5, 8]])
 cases = {
     "a": a,
     "a.T": a.T,
@@ -423,7 +438,7 @@ except ValueError as e:
 
 ```text
                    C     F  write   owns
-a               True False   True  False
+a               True False   True   True
 a.T            False  True   True  False
 a[::2]         False False   True  False
 broadcast_to   False False  False  False
