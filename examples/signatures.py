@@ -49,14 +49,16 @@ def resolve(path: str):
 def parameters(obj) -> list[tuple[str, str | None]]:
     """(name, default) for each parameter a caller can pass. The default is its text, or None if required.
 
+    A `*args` or `**kwargs` parameter keeps its stars in the name and has the default "—": it has no default.
     Python callables come from `inspect.signature`. C callables and ufuncs have no signature object, so
     their parameters are read from the first line of the docstring, which is the signature NumPy documents.
     """
     try:
         sig = inspect.signature(obj)
-        return [(p.name, None if p.default is p.empty else repr(p.default))
-                for p in sig.parameters.values()
-                if p.kind is not p.VAR_KEYWORD and p.name != "self"]
+        stars = {inspect.Parameter.VAR_POSITIONAL: "*", inspect.Parameter.VAR_KEYWORD: "**"}
+        return [(stars[p.kind] + p.name, "—") if p.kind in stars else
+                (p.name, None if p.default is p.empty else repr(p.default))
+                for p in sig.parameters.values() if p.name != "self"]
     except (ValueError, TypeError):
         pass
     first = (obj.__doc__ or "").strip().splitlines()[0]
@@ -74,8 +76,10 @@ def parameters(obj) -> list[tuple[str, str | None]]:
     result = []
     for c in out:
         name, _, default = c.partition("=")
-        name = name.strip().lstrip("*")
-        if name and name not in ("/", "self", "kwargs"):
+        name = name.strip()
+        if name.startswith("*") and name.lstrip("*"):
+            result.append((name, "—"))                # *args or **kwargs; a bare `*` is only a marker
+        elif name and name not in ("*", "/", "self"):
             result.append((name, default.strip() or None))
     return result
 

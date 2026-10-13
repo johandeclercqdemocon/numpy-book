@@ -12,7 +12,8 @@ Checks, all mechanical and all zero-false-positive by design:
   output    every ```text block directly below a ```python block must equal the real output
   examples  every examples/*.py module named in a chapter runs and exits 0
   params    every `#### name` heading in a chapter names a real callable. The ```text block under it is its
-            real signature. Every row of its parameter table is a real parameter, with its real default
+            real signature. Every row of its parameter table is a real parameter, with its real default,
+            and every parameter of the signature has a row
 
 A block that times something (timeit, perf_counter) or measures memory (tracemalloc) runs alone, after
 the parallel batch, so that its asserted ratios are not distorted by the other blocks.
@@ -208,8 +209,8 @@ def _sections(text: str):
 
 
 def check_parameters():
-    """Each `#### name` heading: the text block is the real signature, and every table row is a real
-    parameter with its real default."""
+    """Each `#### name` heading: the text block is the real signature, every table row is a real
+    parameter with its real default, and every parameter of the signature has a row."""
     checked = 0
     for p in sorted((ROOT / "chapters").glob("*.md")):
         for name, body in _sections(p.read_text(encoding="utf-8")):
@@ -233,6 +234,8 @@ def check_parameters():
                     if pname not in real:
                         fail(f"{where}: `{pname}` is not a parameter")
                         continue
+                    if real[pname] == "—" and default != "—":
+                        fail(f"{where}: `{pname}` has no default, the table says {default}")
                     if default == "—":
                         continue                      # "see the signature": only the name is checked
                     want = "required" if real[pname] is None else f"`{real[pname]}`"
@@ -240,6 +243,8 @@ def check_parameters():
                         fail(f"{where}: default of `{pname}` is {want}, the table says {default}")
             if not seen:
                 fail(f"{where}: no parameter table")
+            for pname in [n for n in real if n not in seen]:
+                fail(f"{where}: `{pname}` is in the signature and has no row in the table")
             for dup in sorted({n for n in seen if seen.count(n) > 1}):
                 fail(f"{where}: `{dup}` is listed twice")
             checked += 1
@@ -348,7 +353,7 @@ def main():
     print(f"[ OK ] {blocks} python blocks run")
     print(f"[ OK ] {outs} claimed outputs match what the code prints")
     print(f"[ OK ] {mods} example modules run")
-    print(f"[ OK ] {params} callables have their real signature and real defaults")
+    print(f"[ OK ] {params} callables have their real signature, real defaults and a row for every parameter")
     print(f"[ OK ] {idents} distinct np.* names in the text exist")
     if failures:
         print(f"\n{len(failures)} problem(s).")
