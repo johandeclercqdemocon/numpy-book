@@ -45,16 +45,7 @@ np.add(x1, x2, /, out=None, *, where=True, casting='same_kind', order='K', dtype
 
 The ufunc adds two arrays element by element, with the broadcast rule of chapter 5. The operator `+` calls it.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x1`, `x2` | required | the two inputs. They broadcast against each other | a shape that does not broadcast raises `ValueError` |
-| `out` | `None` | an array to write the result into | an `out` of a type that cannot hold the result raises `UFuncTypeError`: `float64` into `int64` is refused |
-| `where` | `True` | a boolean array. Elements where it is `False` are skipped | without `out`, the skipped elements have undefined values |
-| `casting` | `'same_kind'` | which casts the ufunc may do to match types | `'unsafe'` allows `float64` into `int64`, and it truncates |
-| `dtype` | `None` | the type of the computation and of the result | `dtype=np.int64` on two `int8` values 127 and 1 gives 128 and not -128 |
-| `order` | `'K'` | the memory order of the result. `'K'` follows the inputs, `'F'` puts the first axis in consecutive memory | — |
-| `subok` | `True` | with `True`, a subclass of `ndarray` in the input, such as a masked array, gives a result of that subclass. With `False`, a plain `ndarray` | with `False`, the result of a masked array has no mask |
-| `signature` | `None` | the types of the inner loop, as a string such as `'dd->d'` (two `float64` in, one out). It forces one loop | `'ff->f'` on `float64` inputs computes in `float32` |
+The table under `np.add` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.add.reduce`
 
@@ -64,13 +55,7 @@ np.add.reduce(array, /, axis=0, dtype=None, out=None, **kwargs)
 
 The method folds the array along one axis to one value for each position of the other axes.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `array` | required | the array to fold | an empty array gives the identity of the ufunc: 0 for `np.add` |
-| `axis` | `0` | the axis to fold along. With `None`, all axes | the default is 0, and `np.sum` has `None`. On the array of the next block the two give `[ 4  6 13]` and `23` |
-| `dtype` | `None` | the type of the running total | — |
-| `out` | `None` | an array to write the result into | — |
-| `**kwargs` | — | `keepdims`, `initial` and `where`, by name. They do what they do for `np.sum` | any other name raises `TypeError` |
+The table under `np.add.reduce` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.add.accumulate`
 
@@ -80,12 +65,7 @@ np.add.accumulate(array, /, axis=0, dtype=None, out=None)
 
 The method returns every partial result of the fold, in order.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `array` | required | the array to scan | — |
-| `axis` | `0` | the axis to scan along | the default is 0, and `np.cumsum` flattens with `None` |
-| `dtype` | `None` | the type of the running total and of the result | a `float32` input keeps a `float32` total, and the drift of chapter 2 appears |
-| `out` | `None` | an array to write the result into | — |
+The table under `np.add.accumulate` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.add.outer`
 
@@ -95,10 +75,7 @@ np.add.outer(A, B, /, **kwargs)
 
 The method applies the ufunc to every pair of one element of `A` and one element of `B`. The result has the shape of `A` followed by the shape of `B`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `A`, `B` | required | the two inputs | the result has `A.ndim + B.ndim` axes, and a large pair makes a large array |
-| `**kwargs` | — | the keyword arguments of the ufunc, such as `out`, `dtype` and `where` | — |
+The table under `np.add.outer` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The call `np.add.reduce(x)` is `x.sum()`. It folds the array to one value. The call `np.add.accumulate(x)` is `np.cumsum(x)`. It keeps every partial result. The call `np.maximum.accumulate(x)` gives the running maximum, which has no special name in NumPy. The call `np.multiply.outer` gives every product of a pair, which is the broadcast of chapter 5 written as a method.
 
@@ -163,15 +140,7 @@ np.nansum(a, axis=None, dtype=None, out=None, keepdims=<no value>, initial=<no v
 
 The function adds the values of an array and treats `nan` as 0. It takes the same arguments as `np.sum`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the array | an array of only `nan` gives `0.0`, which looks like a real sum |
-| `axis` | `None` | the axis to add along | — |
-| `dtype` | `None` | the type of the running total | — |
-| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
-| `keepdims` | `<no value>` | with `True`, the reduced axes stay with length 1 | — |
-| `initial` | `<no value>` | a start value for the sum | an array of only `nan` with `initial=5` gives `5.0` |
-| `where` | `<no value>` | a boolean array. Only the values where it is `True` are added | — |
+The table under `np.nansum` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The `nan` functions skip the missing values. Use them with intent. A silent `nansum` on a column that is mostly `nan` gives a number, and the number is a sum of very few values.
 
@@ -258,14 +227,7 @@ np.vectorize(pyfunc=<no value>, otypes=None, doc=None, excluded=None, cache=Fals
 
 The class wraps a Python function so that it accepts arrays. It calls the function once for each element.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `pyfunc` | `<no value>` | the Python function to wrap | it is called in a Python loop, so the speed is the speed of a loop |
-| `otypes` | `None` | the output types. Without it, NumPy takes the type of the first result | `0 if v < 1 else v` on `[0.5, 2.7]` gives `[0 2]`, because the first result is an integer |
-| `doc` | `None` | the docstring of the new object. With `None`, the docstring of `pyfunc` | — |
-| `excluded` | `None` | a set of positions or names of arguments that are passed to `pyfunc` unchanged | without it, a list argument is split into its elements: `f(x, c)` with `c=[10, 20]` gets `10`, then `20`, and not the list |
-| `cache` | `False` | with `True`, the call that finds the output type is kept, so `pyfunc` runs once on each element | without `otypes` and without `cache`, `pyfunc` runs twice on the first element. A function with side effects shows it |
-| `signature` | `None` | a generalized signature such as `(n),(n)->()` for a function of arrays | a wrong signature raises `ValueError` at the call |
+The table under `np.vectorize` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 In the run above, the `np.vectorize` call was slower than the list comprehension that it replaces. The assert proves only that it is not more than 2 times faster. The assert also proves that the real vectorized form, with `np.where`, is more than 5 times faster than the loop. Use `np.vectorize` to make a Python function accept arrays in a place where speed does not matter. Do not use it to go faster.
 
@@ -324,13 +286,7 @@ np.lib.stride_tricks.sliding_window_view(x, window_shape, axis=None, *, subok=Fa
 
 The function returns a read-only view in which each row is one window of the input. It copies nothing.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | the array | — |
-| `window_shape` | required | the length of the window, or a tuple of lengths | a window longer than the input raises `ValueError` |
-| `axis` | `None` | the axis or axes to slide along | with `None`, the window slides over all axes, and `window_shape` must have one length for each |
-| `subok` | `False` | with `True`, a subclass of `ndarray`, such as a masked array, stays that subclass | with `False`, a masked array loses its mask, and the hidden values appear in the windows |
-| `writeable` | `False` | with `True`, writes are allowed | a write changes every window that holds that position |
+The table under `np.lib.stride_tricks.sliding_window_view` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.convolve`
 
@@ -340,10 +296,7 @@ np.convolve(a, v, mode='full')
 
 The function returns the discrete convolution of two 1-D arrays. With a flat kernel, it is a moving sum.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a`, `v` | required | the signal and the kernel | when `v` is longer than `a`, NumPy swaps them, and `ma_convolve` returns 3 values for 3 inputs and `w = 5` |
-| `mode` | `'full'` | `'full'` returns `n + w - 1` values. `'valid'` returns `n - w + 1` values, only where the kernel fits | `'full'` has partial windows at both ends, and they are not averages of `w` values |
+The table under `np.convolve` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The next five functions have the same two parameters. Each section below gives what goes wrong for that version.
 
@@ -355,10 +308,7 @@ ma_loop(x: numpy.ndarray, w: int) -> numpy.ndarray
 
 The function computes the moving average from the definition, one window at a time.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | a 1-D array of values | the slowest version in the timing block, scaled from 20,000 values |
-| `w` | required | the window length, a positive integer | a `w` larger than the input raises `ValueError` |
+The table under `ma_loop` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `ma_cumsum`
 
@@ -368,10 +318,7 @@ ma_cumsum(x: numpy.ndarray, w: int) -> numpy.ndarray
 
 The function computes the moving average from a cumulative sum.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | a 1-D array of values | `float32` values from 10,000 to 10,100 give an error of 207 |
-| `w` | required | the window length, a positive integer | a `w` larger than the input gives an empty array and no error |
+The table under `ma_cumsum` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `ma_cumsum_centered`
 
@@ -381,10 +328,7 @@ ma_cumsum_centered(x: numpy.ndarray, w: int) -> numpy.ndarray
 
 The function subtracts the mean first, so the cumulative sum stays small, and adds it back after.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | a 1-D array of values | the error is 0 on seed 2 and 4.7e-4 on seed 3, for `float32` values from 10,000 to 10,100 |
-| `w` | required | the window length, a positive integer | the same empty result as `ma_cumsum` for a `w` larger than the input |
+The table under `ma_cumsum_centered` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `ma_window`
 
@@ -394,10 +338,7 @@ ma_window(x: numpy.ndarray, w: int) -> numpy.ndarray
 
 The function averages each row of a sliding-window view.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | a 1-D array of values | the slowest of the three fast versions in the timing block |
-| `w` | required | the window length, a positive integer | a `w` larger than the input raises `ValueError` |
+The table under `ma_window` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `ma_convolve`
 
@@ -407,10 +348,7 @@ ma_convolve(x: numpy.ndarray, w: int) -> numpy.ndarray
 
 The function averages with a convolution and a flat kernel.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | a 1-D array of values | — |
-| `w` | required | the window length, a positive integer | a `w` larger than the input returns `len(x)` values that are not moving averages |
+The table under `ma_convolve` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 Time them on one million values with `w = 50`.
 
@@ -654,6 +592,123 @@ The identity is the value of a fold over no elements: 0 for addition and 1 for m
 | `ma_cumsum_centered` | The precision trap in the fast version | the cumulative-sum version after centering |
 | `ma_window` | The function you build: a moving average | moving average from a window view |
 | `ma_convolve` | The function you build: a moving average | moving average from a convolution |
+
+### Parameters
+
+##### `np.add`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x1`, `x2` | required | the two inputs. They broadcast against each other | a shape that does not broadcast raises `ValueError` |
+| `out` | `None` | an array to write the result into | an `out` of a type that cannot hold the result raises `UFuncTypeError`: `float64` into `int64` is refused |
+| `where` | `True` | a boolean array. Elements where it is `False` are skipped | without `out`, the skipped elements have undefined values |
+| `casting` | `'same_kind'` | which casts the ufunc may do to match types | `'unsafe'` allows `float64` into `int64`, and it truncates |
+| `dtype` | `None` | the type of the computation and of the result | `dtype=np.int64` on two `int8` values 127 and 1 gives 128 and not -128 |
+| `order` | `'K'` | the memory order of the result. `'K'` follows the inputs, `'F'` puts the first axis in consecutive memory | — |
+| `subok` | `True` | with `True`, a subclass of `ndarray` in the input, such as a masked array, gives a result of that subclass. With `False`, a plain `ndarray` | with `False`, the result of a masked array has no mask |
+| `signature` | `None` | the types of the inner loop, as a string such as `'dd->d'` (two `float64` in, one out). It forces one loop | `'ff->f'` on `float64` inputs computes in `float32` |
+
+##### `np.add.reduce`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `array` | required | the array to fold | an empty array gives the identity of the ufunc: 0 for `np.add` |
+| `axis` | `0` | the axis to fold along. With `None`, all axes | the default is 0, and `np.sum` has `None`. On the array of the next block the two give `[ 4  6 13]` and `23` |
+| `dtype` | `None` | the type of the running total | — |
+| `out` | `None` | an array to write the result into | — |
+| `**kwargs` | — | `keepdims`, `initial` and `where`, by name. They do what they do for `np.sum` | any other name raises `TypeError` |
+
+##### `np.add.accumulate`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `array` | required | the array to scan | — |
+| `axis` | `0` | the axis to scan along | the default is 0, and `np.cumsum` flattens with `None` |
+| `dtype` | `None` | the type of the running total and of the result | a `float32` input keeps a `float32` total, and the drift of chapter 2 appears |
+| `out` | `None` | an array to write the result into | — |
+
+##### `np.add.outer`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A`, `B` | required | the two inputs | the result has `A.ndim + B.ndim` axes, and a large pair makes a large array |
+| `**kwargs` | — | the keyword arguments of the ufunc, such as `out`, `dtype` and `where` | — |
+
+##### `np.nansum`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array | an array of only `nan` gives `0.0`, which looks like a real sum |
+| `axis` | `None` | the axis to add along | — |
+| `dtype` | `None` | the type of the running total | — |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
+| `keepdims` | `<no value>` | with `True`, the reduced axes stay with length 1 | — |
+| `initial` | `<no value>` | a start value for the sum | an array of only `nan` with `initial=5` gives `5.0` |
+| `where` | `<no value>` | a boolean array. Only the values where it is `True` are added | — |
+
+##### `np.vectorize`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `pyfunc` | `<no value>` | the Python function to wrap | it is called in a Python loop, so the speed is the speed of a loop |
+| `otypes` | `None` | the output types. Without it, NumPy takes the type of the first result | `0 if v < 1 else v` on `[0.5, 2.7]` gives `[0 2]`, because the first result is an integer |
+| `doc` | `None` | the docstring of the new object. With `None`, the docstring of `pyfunc` | — |
+| `excluded` | `None` | a set of positions or names of arguments that are passed to `pyfunc` unchanged | without it, a list argument is split into its elements: `f(x, c)` with `c=[10, 20]` gets `10`, then `20`, and not the list |
+| `cache` | `False` | with `True`, the call that finds the output type is kept, so `pyfunc` runs once on each element | without `otypes` and without `cache`, `pyfunc` runs twice on the first element. A function with side effects shows it |
+| `signature` | `None` | a generalized signature such as `(n),(n)->()` for a function of arrays | a wrong signature raises `ValueError` at the call |
+
+##### `np.lib.stride_tricks.sliding_window_view`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | the array | — |
+| `window_shape` | required | the length of the window, or a tuple of lengths | a window longer than the input raises `ValueError` |
+| `axis` | `None` | the axis or axes to slide along | with `None`, the window slides over all axes, and `window_shape` must have one length for each |
+| `subok` | `False` | with `True`, a subclass of `ndarray`, such as a masked array, stays that subclass | with `False`, a masked array loses its mask, and the hidden values appear in the windows |
+| `writeable` | `False` | with `True`, writes are allowed | a write changes every window that holds that position |
+
+##### `np.convolve`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a`, `v` | required | the signal and the kernel | when `v` is longer than `a`, NumPy swaps them, and `ma_convolve` returns 3 values for 3 inputs and `w = 5` |
+| `mode` | `'full'` | `'full'` returns `n + w - 1` values. `'valid'` returns `n - w + 1` values, only where the kernel fits | `'full'` has partial windows at both ends, and they are not averages of `w` values |
+
+##### `ma_loop`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | the slowest version in the timing block, scaled from 20,000 values |
+| `w` | required | the window length, a positive integer | a `w` larger than the input raises `ValueError` |
+
+##### `ma_cumsum`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | `float32` values from 10,000 to 10,100 give an error of 207 |
+| `w` | required | the window length, a positive integer | a `w` larger than the input gives an empty array and no error |
+
+##### `ma_cumsum_centered`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | the error is 0 on seed 2 and 4.7e-4 on seed 3, for `float32` values from 10,000 to 10,100 |
+| `w` | required | the window length, a positive integer | the same empty result as `ma_cumsum` for a `w` larger than the input |
+
+##### `ma_window`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | the slowest of the three fast versions in the timing block |
+| `w` | required | the window length, a positive integer | a `w` larger than the input raises `ValueError` |
+
+##### `ma_convolve`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of values | — |
+| `w` | required | the window length, a positive integer | a `w` larger than the input returns `len(x)` values that are not moving averages |
+
 
 ## What you have now
 

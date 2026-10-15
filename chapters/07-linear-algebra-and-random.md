@@ -42,18 +42,7 @@ np.matmul(x1, x2, /, out=None, *, axes=<no value>, axis=<no value>, keepdims=Fal
 
 The ufunc computes the matrix product. The operator `@` calls it.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x1`, `x2` | required | the two inputs. The last axis of `x1` must match the second-to-last axis of `x2`. Leading axes broadcast | a mismatch raises `ValueError`. The `*` operator gives the right shape and the wrong values for two square matrices |
-| `out` | `None` | an array to write the result into | an `int64` `out` for `float64` inputs raises `UFuncTypeError` |
-| `axes` | `<no value>` | a list of three pairs: the two axes that hold the matrix in `x1`, in `x2` and in the result. With `<no value>`, the last two axes | `axes=[(1, 2), (0, 1), (1, 2)]` on shapes `(3, 2, 4)` and `(4, 5)` gives `(3, 2, 5)`. A pair that names the wrong axes raises `ValueError` |
-| `axis` | `<no value>` | one axis for all operands, for a generalized ufunc with one shared core axis | `np.matmul` has more than one core axis, so any value raises `TypeError` |
-| `keepdims` | `False` | for a generalized ufunc, keep the reduced core axes with length 1 | `np.matmul` does not support it. `keepdims=True` raises `TypeError` |
-| `casting` | `'same_kind'` | which casts are allowed to write the result. As for `np.add` in chapter 6 | — |
-| `dtype` | `None` | the type of the computation and of the result | — |
-| `order` | `'K'` | the memory order of the result | — |
-| `subok` | `True` | with `True`, a subclass of `ndarray` gives a result of that subclass | — |
-| `signature` | `None` | the types of the inner loop, as for `np.add` in chapter 6 | — |
+The table under `np.matmul` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 Use `@` and `np.dot` only on arrays. Do not use the `*` operator for a matrix product. It multiplies element by element, and for two square matrices it gives a result with the right shape and the wrong values.
 
@@ -97,10 +86,7 @@ np.linalg.solve(a, b)
 
 The function solves `a @ x = b` for `x` by a factorization of `a`. It does not form the inverse.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | a square matrix, or a stack of square matrices | a singular matrix raises `LinAlgError: Singular matrix`. A nearly singular matrix gives no error and a wrong answer |
-| `b` | required | the right side, with shape `(n,)` or `(n, k)` | the residual is small even when `x` is wrong, so a small residual does not prove a small error |
+The table under `np.linalg.solve` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.linalg.cond`
 
@@ -110,10 +96,7 @@ np.linalg.cond(x, p=None)
 
 The function returns the condition number of a matrix: the factor by which a small change in the input can grow in the answer.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | the matrix | for a singular matrix the result is a very large number or `inf` |
-| `p` | `None` | the norm. With `None`, the 2-norm, from the singular values | other norms cost less and give other values |
+The table under `np.linalg.cond` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 Read the table in three parts.
 
@@ -189,11 +172,7 @@ np.linalg.lstsq(a, b, rcond=None)
 
 The function returns the vector `beta` that minimizes the sum of squares of `a @ beta - b`. It returns a tuple of four values: the solution, the residuals, the rank and the singular values.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the design matrix, with one row for each observation | two equal columns give a rank below the number of columns, and the coefficients are not unique |
-| `b` | required | the observations, with shape `(m,)` or `(m, k)` | the residuals are empty when the rank is below the number of columns |
-| `rcond` | `None` | singular values below `rcond` times the largest are treated as zero. With `None`, the machine precision times the larger side | a larger `rcond` drops small directions and can change the fit |
+The table under `np.linalg.lstsq` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 At degree 9 the error of the normal equations is 1.3e-3 and the error of `lstsq` is 5.4e-11. The normal equations lose 7 digits more. At degree 12 the error is 0.39 where `lstsq` has 1e-8.
 
@@ -234,9 +213,7 @@ np.random.default_rng(seed=None)
 
 The function returns a `Generator`, the object that draws random numbers.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `seed` | `None` | an integer, a list of integers, a `SeedSequence` or a generator. With `None`, fresh entropy from the operating system | with `None`, two runs give different numbers, and you cannot repeat the run |
+The table under `np.random.default_rng` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.random.Generator.random`
 
@@ -246,11 +223,7 @@ np.random.Generator.random(self, size=None, dtype=<class 'numpy.float64'>, out=N
 
 The method returns floats from the half-open range from 0.0 up to, and not including, 1.0.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `size` | `None` | the shape of the result. With `None`, one number | a bare integer gives a 1-D array, and a tuple gives that shape |
-| `dtype` | `<class 'numpy.float64'>` | `float64` or `float32` | — |
-| `out` | `None` | an array to fill | — |
+The table under `np.random.Generator.random` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.random.Generator.integers`
 
@@ -260,13 +233,7 @@ np.random.Generator.integers(self, low, high=None, size=None, dtype=<class 'nump
 
 The method returns random integers from the half-open range `[low, high)`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `low` | required | the smallest value. With `high` unset, it is the upper limit and the smallest value is 0 | — |
-| `high` | `None` | the upper limit. It is not included | `integers(0, 3)` never gives 3 |
-| `size` | `None` | the shape of the result | — |
-| `dtype` | `<class 'numpy.int64'>` | the integer type of the result | a `high` that the type cannot hold raises `ValueError`: `integers(0, 300, dtype=np.int8)`. A float type raises `TypeError` |
-| `endpoint` | `False` | with `True`, `high` is included | `integers(0, 3, endpoint=True)` can give 3. Without `endpoint`, the largest value is 2 |
+The table under `np.random.Generator.integers` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 ## Parallel streams: `spawn`, not `seed + i`
 
@@ -303,12 +270,7 @@ np.random.SeedSequence(entropy=None, *, spawn_key=(), pool_size=4, n_children_sp
 
 The class turns a seed into the start states of one or more generators. It also makes child sequences.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `entropy` | `None` | the seed: an integer or a list of integers. With `None`, fresh entropy | with `None`, the sequence cannot be repeated |
-| `spawn_key` | `()` | the position of this sequence in a tree of sequences | a child made by `spawn` has a key such as `(0,)`, and two children must not share a key |
-| `pool_size` | `4` | the size of the internal pool of entropy, in 32-bit words. Keep the default | a value below 4 raises `ValueError` |
-| `n_children_spawned` | `0` | the number of children that `spawn` made already. The next child gets this number as its key | a sequence that you build again from the same seed starts at 0, and its children repeat the first children: keys `(0,)` and `(1,)` again. Pass the count to continue at `(2,)` |
+The table under `np.random.SeedSequence` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.random.SeedSequence.spawn`
 
@@ -318,9 +280,7 @@ np.random.SeedSequence.spawn(self, n_children)
 
 The method returns a list of child sequences. Each one has a different `spawn_key`, and so a different stream.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `n_children` | required | how many children to make | calling it again on the same parent continues the count, so the next children are new ones, not the same ones |
+The table under `np.random.SeedSequence.spawn` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 Each child sequence is derived from the parent in a way that is designed to give independent streams. The result of worker 2 does not depend on whether worker 1 ran first. This is the property that lets you move from a loop to a pool of processes and keep the numbers.
 
@@ -383,16 +343,7 @@ np.percentile(a, q, axis=None, out=None, overwrite_input=False, method='linear',
 
 The function returns the value below which a given percent of the data lie.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the data | — |
-| `q` | required | the percent, from 0 to 100, as a number or a list | a fraction such as `0.025` means 0.025 percent. Use `2.5` |
-| `axis` | `None` | the axis to work along. With `None`, the flattened array | — |
-| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
-| `overwrite_input` | `False` | with `True`, the function can sort the input in place to save memory | the input changes: `[5, 1, 4, 2, 3]` became `[1, 2, 3, 4, 5]` after one call for the median |
-| `method` | `'linear'` | how to estimate between data points. There are many | `'nearest'` gives data values only, and `'linear'` can give a value that is not in the data |
-| `keepdims` | `False` | with `True`, the reduced axes stay with length 1 | with a list for `q`, the result gets a new first axis: `q=[25, 75]` with `axis=1` on a `(3, 4)` array gives `(2, 3, 1)` |
-| `weights` | `None` | a weight for each value of `a` | only `method='inverted_cdf'` accepts weights. With the default `'linear'`, it raises `ValueError` |
+The table under `np.percentile` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `hilbert`
 
@@ -402,9 +353,7 @@ hilbert(n: int) -> numpy.ndarray
 
 The function returns the `n`-by-`n` Hilbert matrix, with the entry `1 / (i + j + 1)`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `n` | required | the size of the matrix | the condition number is 1.6e4 at 4, 1.5e10 at 8 and 1.8e16 at 12 |
+The table under `hilbert` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `bootstrap_slopes`
 
@@ -414,12 +363,7 @@ bootstrap_slopes(x: numpy.ndarray, y: numpy.ndarray, n_boot: int, seed) -> numpy
 
 The function returns the slope of the least-squares line for each of `n_boot` resamples of the rows.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | the 1-D array of predictors | a constant `x` gives `nan` slopes and the warning `invalid value encountered in divide` |
-| `y` | required | the 1-D array of observations, with the same length as `x` | a different length raises `IndexError` |
-| `n_boot` | required | the number of resamples | the memory is `n_boot * len(x)` values for each of `x[idx]` and `y[idx]` |
-| `seed` | required | any seed that `default_rng` accepts | the same seed gives the same slopes, and a different seed gives a different interval |
+The table under `bootstrap_slopes` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `fit_line`
 
@@ -429,12 +373,7 @@ fit_line(x: numpy.ndarray, y: numpy.ndarray, n_boot: int = 1000, seed=0) -> tupl
 
 The function returns the intercept, the slope and a 95 percent bootstrap interval for the slope.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | the 1-D array of predictors | — |
-| `y` | required | the 1-D array of observations | — |
-| `n_boot` | `1000` | the number of resamples | with 500 resamples, the measured coverage was 289 of 300 trials |
-| `seed` | `0` | the seed of the resampling | the default makes every call give the same interval, which hides the spread between seeds |
+The table under `fit_line` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 Two checks that the module runs are worth stating. First, each bootstrap slope equals the slope that `lstsq` gives for the same resample, so the closed-form shortcut is right. Second, a bootstrap interval is a claim about coverage, and you can measure the claim. Fit 300 data sets that have a true slope of 2, build the interval for each, and count how often the interval holds 2.
 
@@ -566,6 +505,122 @@ Each child has its own key, and the key goes into the start state. This is why c
 | `hilbert` | Solve, do not invert | the Hilbert test matrix |
 | `bootstrap_slopes` | The function you build | slopes of many row resamples at once |
 | `fit_line` | The function you build | line fit with a bootstrap interval |
+
+### Parameters
+
+##### `np.matmul`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x1`, `x2` | required | the two inputs. The last axis of `x1` must match the second-to-last axis of `x2`. Leading axes broadcast | a mismatch raises `ValueError`. The `*` operator gives the right shape and the wrong values for two square matrices |
+| `out` | `None` | an array to write the result into | an `int64` `out` for `float64` inputs raises `UFuncTypeError` |
+| `axes` | `<no value>` | a list of three pairs: the two axes that hold the matrix in `x1`, in `x2` and in the result. With `<no value>`, the last two axes | `axes=[(1, 2), (0, 1), (1, 2)]` on shapes `(3, 2, 4)` and `(4, 5)` gives `(3, 2, 5)`. A pair that names the wrong axes raises `ValueError` |
+| `axis` | `<no value>` | one axis for all operands, for a generalized ufunc with one shared core axis | `np.matmul` has more than one core axis, so any value raises `TypeError` |
+| `keepdims` | `False` | for a generalized ufunc, keep the reduced core axes with length 1 | `np.matmul` does not support it. `keepdims=True` raises `TypeError` |
+| `casting` | `'same_kind'` | which casts are allowed to write the result. As for `np.add` in chapter 6 | — |
+| `dtype` | `None` | the type of the computation and of the result | — |
+| `order` | `'K'` | the memory order of the result | — |
+| `subok` | `True` | with `True`, a subclass of `ndarray` gives a result of that subclass | — |
+| `signature` | `None` | the types of the inner loop, as for `np.add` in chapter 6 | — |
+
+##### `np.linalg.solve`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | a square matrix, or a stack of square matrices | a singular matrix raises `LinAlgError: Singular matrix`. A nearly singular matrix gives no error and a wrong answer |
+| `b` | required | the right side, with shape `(n,)` or `(n, k)` | the residual is small even when `x` is wrong, so a small residual does not prove a small error |
+
+##### `np.linalg.cond`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | the matrix | for a singular matrix the result is a very large number or `inf` |
+| `p` | `None` | the norm. With `None`, the 2-norm, from the singular values | other norms cost less and give other values |
+
+##### `np.linalg.lstsq`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the design matrix, with one row for each observation | two equal columns give a rank below the number of columns, and the coefficients are not unique |
+| `b` | required | the observations, with shape `(m,)` or `(m, k)` | the residuals are empty when the rank is below the number of columns |
+| `rcond` | `None` | singular values below `rcond` times the largest are treated as zero. With `None`, the machine precision times the larger side | a larger `rcond` drops small directions and can change the fit |
+
+##### `np.random.default_rng`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `seed` | `None` | an integer, a list of integers, a `SeedSequence` or a generator. With `None`, fresh entropy from the operating system | with `None`, two runs give different numbers, and you cannot repeat the run |
+
+##### `np.random.Generator.random`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `size` | `None` | the shape of the result. With `None`, one number | a bare integer gives a 1-D array, and a tuple gives that shape |
+| `dtype` | `<class 'numpy.float64'>` | `float64` or `float32` | — |
+| `out` | `None` | an array to fill | — |
+
+##### `np.random.Generator.integers`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `low` | required | the smallest value. With `high` unset, it is the upper limit and the smallest value is 0 | — |
+| `high` | `None` | the upper limit. It is not included | `integers(0, 3)` never gives 3 |
+| `size` | `None` | the shape of the result | — |
+| `dtype` | `<class 'numpy.int64'>` | the integer type of the result | a `high` that the type cannot hold raises `ValueError`: `integers(0, 300, dtype=np.int8)`. A float type raises `TypeError` |
+| `endpoint` | `False` | with `True`, `high` is included | `integers(0, 3, endpoint=True)` can give 3. Without `endpoint`, the largest value is 2 |
+
+##### `np.random.SeedSequence`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `entropy` | `None` | the seed: an integer or a list of integers. With `None`, fresh entropy | with `None`, the sequence cannot be repeated |
+| `spawn_key` | `()` | the position of this sequence in a tree of sequences | a child made by `spawn` has a key such as `(0,)`, and two children must not share a key |
+| `pool_size` | `4` | the size of the internal pool of entropy, in 32-bit words. Keep the default | a value below 4 raises `ValueError` |
+| `n_children_spawned` | `0` | the number of children that `spawn` made already. The next child gets this number as its key | a sequence that you build again from the same seed starts at 0, and its children repeat the first children: keys `(0,)` and `(1,)` again. Pass the count to continue at `(2,)` |
+
+##### `np.random.SeedSequence.spawn`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `n_children` | required | how many children to make | calling it again on the same parent continues the count, so the next children are new ones, not the same ones |
+
+##### `np.percentile`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the data | — |
+| `q` | required | the percent, from 0 to 100, as a number or a list | a fraction such as `0.025` means 0.025 percent. Use `2.5` |
+| `axis` | `None` | the axis to work along. With `None`, the flattened array | — |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
+| `overwrite_input` | `False` | with `True`, the function can sort the input in place to save memory | the input changes: `[5, 1, 4, 2, 3]` became `[1, 2, 3, 4, 5]` after one call for the median |
+| `method` | `'linear'` | how to estimate between data points. There are many | `'nearest'` gives data values only, and `'linear'` can give a value that is not in the data |
+| `keepdims` | `False` | with `True`, the reduced axes stay with length 1 | with a list for `q`, the result gets a new first axis: `q=[25, 75]` with `axis=1` on a `(3, 4)` array gives `(2, 3, 1)` |
+| `weights` | `None` | a weight for each value of `a` | only `method='inverted_cdf'` accepts weights. With the default `'linear'`, it raises `ValueError` |
+
+##### `hilbert`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `n` | required | the size of the matrix | the condition number is 1.6e4 at 4, 1.5e10 at 8 and 1.8e16 at 12 |
+
+##### `bootstrap_slopes`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | the 1-D array of predictors | a constant `x` gives `nan` slopes and the warning `invalid value encountered in divide` |
+| `y` | required | the 1-D array of observations, with the same length as `x` | a different length raises `IndexError` |
+| `n_boot` | required | the number of resamples | the memory is `n_boot * len(x)` values for each of `x[idx]` and `y[idx]` |
+| `seed` | required | any seed that `default_rng` accepts | the same seed gives the same slopes, and a different seed gives a different interval |
+
+##### `fit_line`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | the 1-D array of predictors | — |
+| `y` | required | the 1-D array of observations | — |
+| `n_boot` | `1000` | the number of resamples | with 500 resamples, the measured coverage was 289 of 300 trials |
+| `seed` | `0` | the seed of the resampling | the default makes every call give the same interval, which hides the spread between seeds |
+
 
 ## What you have now
 

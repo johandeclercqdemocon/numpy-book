@@ -59,16 +59,7 @@ np.array(object, dtype=None, *, copy=True, order='K', subok=False, ndmin=0, ndma
 
 The function builds an array from Python objects. It is the usual way to enter data by hand.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `object` | required | a list, a tuple, a number or another array. Equal-length nested lists make a 2-D array | unequal rows are an error in NumPy 2 |
-| `dtype` | `None` | the type of each value. With `None`, NumPy takes the default type for the values: `int64` for integers and `float64` for floats. A mix gets the type that holds both | a mix of numbers and text becomes text |
-| `copy` | `True` | `True` always copies. `None` copies only when needed. `False` raises an error if a copy cannot be avoided | `True` costs memory for a large input |
-| `order` | `'K'` | the memory order of the result. `'K'` keeps the order of the input | — |
-| `subok` | `False` | with `False`, the result is always a plain `ndarray`. With `True`, a subclass of `ndarray` in the input, such as a masked array from `np.ma.array`, stays that subclass | with `False`, a masked array loses its mask: the values that were hidden come back |
-| `ndmin` | `0` | the least number of axes. NumPy puts length-1 axes on the left to reach it | — |
-| `ndmax` | `0` | the largest number of axes that NumPy makes from nested lists. `0` means no limit. With `ndmax=1` and `dtype=object`, a list of two lists becomes 2 values, each a list | without `dtype=object`, a list that is deeper than `ndmax` raises `ValueError` |
-| `like` | `None` | an array of another array library. The result is then an array of that library. With `None`, a NumPy array | a value that is not such an array, for example a list, raises `TypeError` |
+The table under `np.array` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The function picks the dtype for you, and sometimes the choice is not the one that you expect.
 
@@ -108,14 +99,7 @@ np.arange(start_or_stop, /, stop=None, step=1, *, dtype=None, device=None, like=
 
 The function returns an array of evenly spaced values. It has the same role as the Python `range`, and it accepts floats.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `start_or_stop` | required | with one argument, the stop value and the start is 0. With two, the start | — |
-| `stop` | `None` | the end of the range. The documented intent is that it is not included | for float steps the last value can be above it (see the example under `np.linspace`) |
-| `step` | `1` | the distance between values. A negative step counts down | a float step gives a count that depends on rounding |
-| `dtype` | `None` | the type of each value. With `None`, NumPy takes an integer type if all arguments are integers, and `float64` if not | a range that is too large for the dtype wraps without an error: 300 values in `int8` end at 43 |
-| `device` | `None` | the device that holds the result, for code that also runs on other array libraries. NumPy accepts only `'cpu'` | any other value, for example `'cuda'`, raises `ValueError` |
-| `like` | `None` | an array of another array library. The result is then an array of that library. With `None`, a NumPy array | a value that is not such an array, for example a list, raises `TypeError` |
+The table under `np.arange` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.zeros`
 
@@ -125,13 +109,7 @@ np.zeros(shape, dtype=None, order='C', *, device=None, like=None)
 
 The function returns a new array of the given shape, filled with zeros. Its relatives `np.ones`, `np.full` and `np.empty` take the same first arguments. The function `np.empty` does not set the values, so the block holds whatever was in that memory before. Never read an array from `np.empty` before you write to it.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `shape` | required | an integer or a tuple of integers. The value `3` gives 3 values. The value `(2, 3)` gives 2 rows of 3 | a bare `2, 3` is an error: the second number is taken as the dtype |
-| `dtype` | `None` | the type of each value. With `None`, the type is `float64` | the default is a float, not an integer |
-| `order` | `'C'` | `'C'` puts the last axis in consecutive memory, `'F'` puts the first axis there | — |
-| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
-| `like` | `None` | an array of another array library. The result is then an array of that library | a list raises `TypeError` |
+The table under `np.zeros` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.linspace`
 
@@ -141,15 +119,7 @@ np.linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None, axis=
 
 The function returns `num` values that are evenly spaced between `start` and `stop`. Use it when you know how many values you want. Use `np.arange` when you know the step.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `start`, `stop` | required | the first value and the last value of the range | — |
-| `num` | `50` | the number of values | — |
-| `endpoint` | `True` | with `False`, the range does not include `stop`, and the step is `(stop - start) / num` | the step changes when you switch it |
-| `retstep` | `False` | with `True`, the function returns the pair `(array, step)` | the result is a tuple, not an array |
-| `dtype` | `None` | the type of the result. With `None`, a float | an integer dtype truncates the values |
-| `axis` | `0` | the axis of the result that holds the samples, when `start` and `stop` are arrays. For `start=[0, 0]`, `stop=[1, 10]` and `num=3`, the result has shape `(3, 2)`, and with `axis=1` it has shape `(2, 3)` | with numbers for `start` and `stop`, the result has one axis, and `axis=1` raises `AxisError` |
-| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
+The table under `np.linspace` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The two functions differ in one important way. The step of `np.arange` is given, and the count is computed from floats. The count of `np.linspace` is given, and the step is computed.
 
@@ -209,10 +179,7 @@ np.shares_memory(a, b, /, max_work=-1)
 
 The function returns `True` if the two arrays have at least one byte of memory in common.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a`, `b` | required | the two arrays to compare | — |
-| `max_work` | `-1` | how much effort to spend. `-1` solves the problem exactly. `0` compares only the first and last byte of each array | the exact answer can take very long for complex strides |
+The table under `np.shares_memory` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The last line of the block above shows the price of a transpose. A C-contiguous array has its last axis in consecutive memory, so a walk along the last axis reads memory in order. The transpose does not have this property. A loop over its last axis jumps 24 bytes at each step. Chapter 3 measures what that costs.
 
@@ -254,9 +221,7 @@ describe(a: numpy.ndarray) -> str
 
 The function reads attributes only, and it never copies the array.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | any `ndarray`, of any shape and dtype | a Python list has no `.shape`, so the call raises `AttributeError` |
+The table under `describe` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The `owns` field is `True` when the array owns its block. It is `False` when the array only looks at the block of another array. The first line shows an array that owns its block. The transpose and the slice read the block of `a`, so their `owns` is `False`. The slice `a[:, ::2]` takes every second column. It has strides `(24, 16)`, so it reads the same block with a step of 16 bytes.
 
@@ -435,6 +400,68 @@ The Fortran strides `(8, 16, 48)` run the other way: 8, then 8 × 2 = 16, then 1
 | `np.linspace` | Making arrays | a given count of evenly spaced values |
 | `np.shares_memory` | A transpose copies nothing | exact test for a shared byte |
 | `describe` | The function you build | one line with the layout of an array |
+
+### Parameters
+
+##### `np.array`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `object` | required | a list, a tuple, a number or another array. Equal-length nested lists make a 2-D array | unequal rows are an error in NumPy 2 |
+| `dtype` | `None` | the type of each value. With `None`, NumPy takes the default type for the values: `int64` for integers and `float64` for floats. A mix gets the type that holds both | a mix of numbers and text becomes text |
+| `copy` | `True` | `True` always copies. `None` copies only when needed. `False` raises an error if a copy cannot be avoided | `True` costs memory for a large input |
+| `order` | `'K'` | the memory order of the result. `'K'` keeps the order of the input | — |
+| `subok` | `False` | with `False`, the result is always a plain `ndarray`. With `True`, a subclass of `ndarray` in the input, such as a masked array from `np.ma.array`, stays that subclass | with `False`, a masked array loses its mask: the values that were hidden come back |
+| `ndmin` | `0` | the least number of axes. NumPy puts length-1 axes on the left to reach it | — |
+| `ndmax` | `0` | the largest number of axes that NumPy makes from nested lists. `0` means no limit. With `ndmax=1` and `dtype=object`, a list of two lists becomes 2 values, each a list | without `dtype=object`, a list that is deeper than `ndmax` raises `ValueError` |
+| `like` | `None` | an array of another array library. The result is then an array of that library. With `None`, a NumPy array | a value that is not such an array, for example a list, raises `TypeError` |
+
+##### `np.arange`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `start_or_stop` | required | with one argument, the stop value and the start is 0. With two, the start | — |
+| `stop` | `None` | the end of the range. The documented intent is that it is not included | for float steps the last value can be above it (see the example under `np.linspace`) |
+| `step` | `1` | the distance between values. A negative step counts down | a float step gives a count that depends on rounding |
+| `dtype` | `None` | the type of each value. With `None`, NumPy takes an integer type if all arguments are integers, and `float64` if not | a range that is too large for the dtype wraps without an error: 300 values in `int8` end at 43 |
+| `device` | `None` | the device that holds the result, for code that also runs on other array libraries. NumPy accepts only `'cpu'` | any other value, for example `'cuda'`, raises `ValueError` |
+| `like` | `None` | an array of another array library. The result is then an array of that library. With `None`, a NumPy array | a value that is not such an array, for example a list, raises `TypeError` |
+
+##### `np.zeros`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `shape` | required | an integer or a tuple of integers. The value `3` gives 3 values. The value `(2, 3)` gives 2 rows of 3 | a bare `2, 3` is an error: the second number is taken as the dtype |
+| `dtype` | `None` | the type of each value. With `None`, the type is `float64` | the default is a float, not an integer |
+| `order` | `'C'` | `'C'` puts the last axis in consecutive memory, `'F'` puts the first axis there | — |
+| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
+| `like` | `None` | an array of another array library. The result is then an array of that library | a list raises `TypeError` |
+
+##### `np.linspace`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `start`, `stop` | required | the first value and the last value of the range | — |
+| `num` | `50` | the number of values | — |
+| `endpoint` | `True` | with `False`, the range does not include `stop`, and the step is `(stop - start) / num` | the step changes when you switch it |
+| `retstep` | `False` | with `True`, the function returns the pair `(array, step)` | the result is a tuple, not an array |
+| `dtype` | `None` | the type of the result. With `None`, a float | an integer dtype truncates the values |
+| `axis` | `0` | the axis of the result that holds the samples, when `start` and `stop` are arrays. For `start=[0, 0]`, `stop=[1, 10]` and `num=3`, the result has shape `(3, 2)`, and with `axis=1` it has shape `(2, 3)` | with numbers for `start` and `stop`, the result has one axis, and `axis=1` raises `AxisError` |
+| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
+
+##### `np.shares_memory`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a`, `b` | required | the two arrays to compare | — |
+| `max_work` | `-1` | how much effort to spend. `-1` solves the problem exactly. `0` compares only the first and last byte of each array | the exact answer can take very long for complex strides |
+
+##### `describe`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | any `ndarray`, of any shape and dtype | a Python list has no `.shape`, so the call raises `AttributeError` |
+
 
 ## What you have now
 

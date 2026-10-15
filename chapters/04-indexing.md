@@ -90,11 +90,7 @@ np.add.at(a, indices, b=None, /)
 
 The method adds `b` to `a` at each position in `indices`, one element at a time. It changes `a` in place and returns `None`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the array to change. It is changed in place | a result that you expect from the call does not exist: the return value is `None` |
-| `indices` | required | an index list, or a tuple of index lists for several axes. A position can appear many times | a negative index counts from the end, so `-1` changes the last element |
-| `b` | `None` | the value to add. A scalar or an array that broadcasts to the indexed shape | — |
+The table under `np.add.at` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.bincount`
 
@@ -104,11 +100,7 @@ np.bincount(x, /, weights=None, minlength=0)
 
 The function counts how many times each integer occurs, or adds a weight for each occurrence.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `x` | required | a 1-D array of non-negative integers | a negative value raises `ValueError` |
-| `weights` | `None` | one weight for each element of `x`. The result then holds the sum of the weights, as `float64` | the weights make the result `float64`, also when they are integers |
-| `minlength` | `0` | the least length of the result | without it, the result has length `max(x) + 1`, and it can differ between two runs on different data |
+The table under `np.bincount` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The statement `a[idx] += 1` is `a[idx] = a[idx] + 1`. NumPy reads `a[idx]` once, adds 1 to each of the four values, and writes four results. Position 1 receives the same result three times. The function `np.add.at` goes one element at a time, so it is correct. The function `np.bincount` counts directly.
 
@@ -122,11 +114,7 @@ np.where(condition, x=None, y=None, /)
 
 With three arguments, the function picks from `x` where the condition is `True` and from `y` where it is `False`. With one argument, it returns the positions where the condition is `True`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `condition` | required | a boolean array, or an array that NumPy reads as boolean | a count of 0 and 1 values is read as a condition: `0` is `False` and every other value is `True` |
-| `x` | `None` | the values where the condition is `True` | it is computed for every element, also the ones that the condition rejects |
-| `y` | `None` | the values where the condition is `False` | it is computed for every element, also the ones that the condition accepts |
+The table under `np.where` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 `np.where(cond, x, y)` picks values from `x` or from `y`. Both `x` and `y` are computed first. A protection that you put in the condition does not stop a bad value in the branch.
 
@@ -282,11 +270,7 @@ group_sum_loop(keys: numpy.ndarray, values: numpy.ndarray, k: int) -> numpy.ndar
 
 The function adds the values of each group with a Python loop. It is the definition, and the other two are checked against it.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `keys` | required | one non-negative integer for each row, in `0 .. k-1` | a key of `k` or more raises `IndexError` |
-| `values` | required | one number for each row, with the same length as `keys` | `zip` stops at the shorter input, so a length mismatch gives no error |
-| `k` | required | the number of groups, which is the length of the result | — |
+The table under `group_sum_loop` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `group_sum_at`
 
@@ -296,11 +280,7 @@ group_sum_at(keys: numpy.ndarray, values: numpy.ndarray, k: int) -> numpy.ndarra
 
 The function adds the values with `np.add.at`, which handles a repeated key correctly.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `keys` | required | one integer for each row, in `0 .. k-1` | a key of `k` or more raises `IndexError`. A key of `-1` adds to the last group |
-| `values` | required | one number for each row, with the same length as `keys` | a different length raises an error |
-| `k` | required | the number of groups, which is the length of the result | — |
+The table under `group_sum_at` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `group_sum_bincount`
 
@@ -310,11 +290,7 @@ group_sum_bincount(keys: numpy.ndarray, values: numpy.ndarray, k: int) -> numpy.
 
 The function adds the values with `np.bincount`, which accepts only non-negative integer keys.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `keys` | required | one non-negative integer for each row | a negative key raises `ValueError` |
-| `values` | required | one number for each row, with the same length as `keys` | a different length raises an error |
-| `k` | required | the least length of the result | a key of `k` or more makes the result longer than `k`, with no error |
+The table under `group_sum_bincount` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 ## Finding the largest values without a sort
 
@@ -352,13 +328,7 @@ np.partition(a, kth, axis=-1, kind='introselect', order=None)
 
 The function puts the `kth` smallest value in its sorted position. It puts smaller values before it and larger values after it, in no order.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the array to partition. The function returns a copy | the input is not changed, and the result is a new block |
-| `kth` | required | the index of the value to put in place. A negative index counts from the end, so `-10` puts the 10 largest at the end | the values on each side are not sorted |
-| `axis` | `-1` | the axis to partition along | — |
-| `kind` | `'introselect'` | the selection algorithm. NumPy has one | — |
-| `order` | `None` | for an array with named fields (a structured array), the field names to compare | on an array without fields, any value raises `ValueError` |
+The table under `np.partition` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 ## How it works
 
@@ -474,6 +444,67 @@ The position 5 is clipped to the last element, 2, or wrapped to `5 % 3`, which i
 | `group_sum_at` | The function you build | group sum with `np.add.at` |
 | `group_sum_bincount` | The function you build | group sum with `np.bincount` |
 | `np.partition` | Finding the largest values without a sort | the k-th value in place, the rest unordered |
+
+### Parameters
+
+##### `np.add.at`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array to change. It is changed in place | a result that you expect from the call does not exist: the return value is `None` |
+| `indices` | required | an index list, or a tuple of index lists for several axes. A position can appear many times | a negative index counts from the end, so `-1` changes the last element |
+| `b` | `None` | the value to add. A scalar or an array that broadcasts to the indexed shape | — |
+
+##### `np.bincount`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `x` | required | a 1-D array of non-negative integers | a negative value raises `ValueError` |
+| `weights` | `None` | one weight for each element of `x`. The result then holds the sum of the weights, as `float64` | the weights make the result `float64`, also when they are integers |
+| `minlength` | `0` | the least length of the result | without it, the result has length `max(x) + 1`, and it can differ between two runs on different data |
+
+##### `np.where`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `condition` | required | a boolean array, or an array that NumPy reads as boolean | a count of 0 and 1 values is read as a condition: `0` is `False` and every other value is `True` |
+| `x` | `None` | the values where the condition is `True` | it is computed for every element, also the ones that the condition rejects |
+| `y` | `None` | the values where the condition is `False` | it is computed for every element, also the ones that the condition accepts |
+
+##### `group_sum_loop`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `keys` | required | one non-negative integer for each row, in `0 .. k-1` | a key of `k` or more raises `IndexError` |
+| `values` | required | one number for each row, with the same length as `keys` | `zip` stops at the shorter input, so a length mismatch gives no error |
+| `k` | required | the number of groups, which is the length of the result | — |
+
+##### `group_sum_at`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `keys` | required | one integer for each row, in `0 .. k-1` | a key of `k` or more raises `IndexError`. A key of `-1` adds to the last group |
+| `values` | required | one number for each row, with the same length as `keys` | a different length raises an error |
+| `k` | required | the number of groups, which is the length of the result | — |
+
+##### `group_sum_bincount`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `keys` | required | one non-negative integer for each row | a negative key raises `ValueError` |
+| `values` | required | one number for each row, with the same length as `keys` | a different length raises an error |
+| `k` | required | the least length of the result | a key of `k` or more makes the result longer than `k`, with no error |
+
+##### `np.partition`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array to partition. The function returns a copy | the input is not changed, and the result is a new block |
+| `kth` | required | the index of the value to put in place. A negative index counts from the end, so `-10` puts the 10 largest at the end | the values on each side are not sorted |
+| `axis` | `-1` | the axis to partition along | — |
+| `kind` | `'introselect'` | the selection algorithm. NumPy has one | — |
+| `order` | `None` | for an array with named fields (a structured array), the field names to compare | on an array without fields, any value raises `ValueError` |
+
 
 ## What you have now
 

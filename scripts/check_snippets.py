@@ -208,12 +208,20 @@ def _sections(text: str):
             yield m.group(1), text[off + len(line):end]
 
 
+TABLE_HEAD = re.compile(r"^##### `([A-Za-z_][\w.]*)`\s*\n(.*?)(?=^#{1,6} |\Z)", re.M | re.S)
+
+
 def check_parameters():
     """Each `#### name` heading: the text block is the real signature, every table row is a real
-    parameter with its real default, and every parameter of the signature has a row."""
+    parameter with its real default, and every parameter of the signature has a row.
+
+    The table is under `##### name` in the chapter's Reference section, so the text reads on at the
+    first use and the full table sits at the end."""
     checked = 0
     for p in sorted((ROOT / "chapters").glob("*.md")):
-        for name, body in _sections(p.read_text(encoding="utf-8")):
+        text = p.read_text(encoding="utf-8")
+        tables = {m.group(1): m.group(2) for m in TABLE_HEAD.finditer(text)}
+        for name, body in _sections(text):
             where = f"{p.relative_to(ROOT)} `{name}`"
             try:
                 params, sig = _callable_info(p, name)
@@ -227,7 +235,9 @@ def check_parameters():
                 fail(f"{where}: signature block differs\n      claimed: {m.group(1).strip()}\n      actual:  {sig}")
             real = dict(params)
             seen = []
-            for r in ROW.finditer(body):
+            if name not in tables:
+                fail(f"{where}: no `##### {name}` table in the Reference section")
+            for r in ROW.finditer(tables.get(name, "")):
                 default = r.group(2)
                 for pname in [n.strip("` ") for n in r.group(1).split(", ")]:
                     seen.append(pname)

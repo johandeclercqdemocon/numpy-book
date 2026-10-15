@@ -46,9 +46,7 @@ np.broadcast_shapes(*args)
 
 The function returns the shape that the rule gives for the input shapes. It makes no array, so it is a cheap test.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `*args` | — | any number of shapes, each a tuple of integers or one integer. With one shape, the result is that shape. With none, `()` | when two lengths differ and neither is 1, it raises `ValueError` and names the shapes |
+The table under `np.broadcast_shapes` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 Use `None` or `np.newaxis` to add a length of 1 at any position. This is the tool that you use to line up the axes that you want.
 
@@ -101,11 +99,7 @@ np.broadcast_to(array, shape, subok=False)
 
 The function returns a read-only view with the given shape. It makes the stride of each stretched axis 0.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `array` | required | the array to stretch | — |
-| `shape` | required | the target shape. The rule of this chapter must give it from the shape of `array` | a shape that the rule does not allow raises `ValueError` |
-| `subok` | `False` | with `True`, a subclass of `ndarray` passes through | — |
+The table under `np.broadcast_to` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 A write to the result raises `ValueError: assignment destination is read-only`. Many of its elements share one memory location, and a write changes all of them.
 
@@ -151,14 +145,7 @@ np.mean(a, axis=None, dtype=None, out=None, keepdims=<no value>, *, where=<no va
 
 The function returns the mean along an axis. The method `a.mean(...)` takes the same arguments after `self`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the array | an empty array gives `nan` and a warning |
-| `axis` | `None` | the axis to average along. With `None`, all values | `axis=1` on a `(5, 3)` array gives shape `(5,)`, which does not align with `(5, 3)` |
-| `dtype` | `None` | the type of the running total and of the result. With `None`, `float64` for an integer input, and the input type for a float input | a `float32` input gives a `float32` mean |
-| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
-| `keepdims` | `<no value>` | with `True`, the averaged axis stays with length 1 | without it, the subtraction of a row mean from the array is an error |
-| `where` | `<no value>` | a boolean array. Only the values where it is `True` are averaged | if no value is `True`, the result is `nan` with a `RuntimeWarning` |
+The table under `np.mean` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The habit that follows: assert the shape of a result at a boundary. A line such as `assert r.shape == (n,)` is cheap and catches this mistake at once.
 
@@ -218,10 +205,7 @@ dist_loop(A: numpy.ndarray, B: numpy.ndarray) -> numpy.ndarray
 
 The function returns the `(n, m)` matrix of distances with two Python loops. It is the definition.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `A` | required | `n` points as an `(n, d)` array | — |
-| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+The table under `dist_loop` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `dist_broadcast`
 
@@ -231,10 +215,7 @@ dist_broadcast(A: numpy.ndarray, B: numpy.ndarray) -> numpy.ndarray
 
 The function returns the same matrix with one broadcast subtraction.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `A` | required | `n` points as an `(n, d)` array | the temporary array has `n * m * d` values: 2080 MB for 2000 points of 64 dimensions |
-| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+The table under `dist_broadcast` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `dist_dot`
 
@@ -244,10 +225,7 @@ dist_dot(A: numpy.ndarray, B: numpy.ndarray) -> numpy.ndarray
 
 The function returns the same matrix from norms and one matrix product.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `A` | required | `n` points as an `(n, d)` array | for points in a cube of side 0.01 at 10,000: error 3.5e-4 in `float64`. In `float32` the largest distance is 8.0 where the true value is 0.0144 |
-| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | the same loss. Centering removes it, as the section on precision shows |
+The table under `dist_dot` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 ## Cost 1: time
 
@@ -406,13 +384,7 @@ np.concatenate(arrays, /, axis=0, out=None, *, dtype=None, casting='same_kind')
 
 The function joins arrays along an existing axis. The function below uses it to put the two point sets in one array before it takes the mean.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `arrays` | required | a sequence of arrays. All shapes must match, except along `axis` | other shapes raise `ValueError` and name the axis that differs |
-| `axis` | `0` | the axis to join along | with `None`, the arrays are flattened first |
-| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | a wrong shape raises `ValueError`. You cannot give both `out` and `dtype`: that raises `TypeError` |
-| `dtype` | `None` | the type of the result. With `None`, the type that holds all inputs | `float64` inputs with `dtype=np.int64` raise `TypeError` under the default `casting` |
-| `casting` | `'same_kind'` | which casts are allowed when `dtype` or `out` is given. `'unsafe'` allows all | with `'unsafe'`, `1.5` becomes `1` with no warning |
+The table under `np.concatenate` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `dist_dot_centered`
 
@@ -422,10 +394,7 @@ dist_dot_centered(A: numpy.ndarray, B: numpy.ndarray) -> numpy.ndarray
 
 The function moves the origin to the mean of both point sets, then calls `dist_dot`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `A` | required | `n` points as an `(n, d)` array | the points must be in a small range. If they are spread over a large range, centering does not help |
-| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+The table under `dist_dot_centered` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 Centering is the fix to remember. It costs one mean and two subtractions. It does not help when the points are spread over a large range. In that case the loss is a property of the problem and not of the method.
 
@@ -540,6 +509,72 @@ Each stretched axis has stride 0, so the two inputs are read in place and the su
 | `dist_dot` | The function you build | distances from norms and a matrix product |
 | `np.concatenate` | Cost 3: precision | join arrays along an existing axis |
 | `dist_dot_centered` | Cost 3: precision | the dot version, with the origin in the middle |
+
+### Parameters
+
+##### `np.broadcast_shapes`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `*args` | — | any number of shapes, each a tuple of integers or one integer. With one shape, the result is that shape. With none, `()` | when two lengths differ and neither is 1, it raises `ValueError` and names the shapes |
+
+##### `np.broadcast_to`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `array` | required | the array to stretch | — |
+| `shape` | required | the target shape. The rule of this chapter must give it from the shape of `array` | a shape that the rule does not allow raises `ValueError` |
+| `subok` | `False` | with `True`, a subclass of `ndarray` passes through | — |
+
+##### `np.mean`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array | an empty array gives `nan` and a warning |
+| `axis` | `None` | the axis to average along. With `None`, all values | `axis=1` on a `(5, 3)` array gives shape `(5,)`, which does not align with `(5, 3)` |
+| `dtype` | `None` | the type of the running total and of the result. With `None`, `float64` for an integer input, and the input type for a float input | a `float32` input gives a `float32` mean |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | — |
+| `keepdims` | `<no value>` | with `True`, the averaged axis stays with length 1 | without it, the subtraction of a row mean from the array is an error |
+| `where` | `<no value>` | a boolean array. Only the values where it is `True` are averaged | if no value is `True`, the result is `nan` with a `RuntimeWarning` |
+
+##### `dist_loop`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A` | required | `n` points as an `(n, d)` array | — |
+| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+
+##### `dist_broadcast`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A` | required | `n` points as an `(n, d)` array | the temporary array has `n * m * d` values: 2080 MB for 2000 points of 64 dimensions |
+| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+
+##### `dist_dot`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A` | required | `n` points as an `(n, d)` array | for points in a cube of side 0.01 at 10,000: error 3.5e-4 in `float64`. In `float32` the largest distance is 8.0 where the true value is 0.0144 |
+| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | the same loss. Centering removes it, as the section on precision shows |
+
+##### `np.concatenate`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `arrays` | required | a sequence of arrays. All shapes must match, except along `axis` | other shapes raise `ValueError` and name the axis that differs |
+| `axis` | `0` | the axis to join along | with `None`, the arrays are flattened first |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | a wrong shape raises `ValueError`. You cannot give both `out` and `dtype`: that raises `TypeError` |
+| `dtype` | `None` | the type of the result. With `None`, the type that holds all inputs | `float64` inputs with `dtype=np.int64` raise `TypeError` under the default `casting` |
+| `casting` | `'same_kind'` | which casts are allowed when `dtype` or `out` is given. `'unsafe'` allows all | with `'unsafe'`, `1.5` becomes `1` with no warning |
+
+##### `dist_dot_centered`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `A` | required | `n` points as an `(n, d)` array | the points must be in a small range. If they are spread over a large range, centering does not help |
+| `B` | required | `m` points as an `(m, d)` array, with the same `d` as `A` | a different `d` raises `ValueError` |
+
 
 ## What you have now
 

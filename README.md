@@ -4,7 +4,7 @@
 
 This is a short book about NumPy for a reader who already writes Python. It has eight chapters. Each chapter ends with something that you built and tested. Each chapter also has a **How it works** section that opens the mechanism under the API.
 
-Every function has its signature and a parameter table at the place where the chapter first uses it. A **Reference** index closes each chapter. The book keeps theory to the minimum that changes what you type. Its subject is one idea: an array is a block of memory plus a description of how to read it, and every surprise in NumPy comes from that description.
+Every function has its signature at the place where the chapter first uses it. A **Reference** section closes each chapter: an index, and a table for each function with each parameter, its default, and what goes wrong with it. The book keeps theory to the minimum that changes what you type. Its subject is one idea: an array is a block of memory plus a description of how to read it, and every surprise in NumPy comes from that description.
 
 **Nothing in it is asserted that was not run.** Every number in the text comes from code that ships with the book. A checker executes every code block and compares every printed output with the text. The checker compares each signature with the signature of the installed NumPy.
 

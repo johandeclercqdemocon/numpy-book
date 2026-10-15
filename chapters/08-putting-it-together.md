@@ -73,12 +73,7 @@ kmeans(X: numpy.ndarray, k: int, seed: int = 0, max_iter: int = 100) -> tuple[nu
 
 The function runs Lloyd's algorithm. It returns the centroids, the label of each point and the number of iterations that changed a label.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `X` | required | the points, as an `(n, d)` array | a 1-D array raises an error in the distance step. Use `X.reshape(-1, 1)` for 1-D points |
-| `k` | required | the number of clusters | `k` above `n` raises `ValueError` at the choice of starting points |
-| `seed` | `0` | the seed of the choice of starting points | seed 0 stops at purity 0.67 on the data of this chapter, and 24 of 30 seeds find the blobs |
-| `max_iter` | `100` | the most iterations | at the limit the function returns with labels that may still change, and the third value equals `max_iter` |
+The table under `kmeans` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The function uses four more NumPy functions that need their signatures.
 
@@ -90,14 +85,7 @@ np.random.Generator.choice(self, a, size=None, replace=True, p=None, axis=0, shu
 
 The method picks elements of an array, or integers below an integer, at random.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | an array, or an integer `n` for the values `0 .. n-1` | — |
-| `size` | `None` | how many to pick | — |
-| `replace` | `True` | with `False`, no element is picked twice | with `True`, two starting centroids can be the same point |
-| `p` | `None` | the probability of each element. With `None`, all are equal | — |
-| `axis` | `0` | the axis of `a` to pick along, when `a` is an array. With `0`, the function picks rows | — |
-| `shuffle` | `True` | with `replace=False`, puts the picked elements in random order. `False` is faster | with `False`, the order of the result is not random: `choice(10, 10, replace=False, shuffle=False)` gave `[0 1 2 ... 9]` |
+The table under `np.random.Generator.choice` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.argmin`
 
@@ -107,12 +95,7 @@ np.argmin(a, axis=None, out=None, *, keepdims=<no value>)
 
 The function returns the index of the smallest value. If two values are equal, the first one wins.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the array | — |
-| `axis` | `None` | the axis to search along. With `None`, the flattened array | with `None` on an `(n, k)` matrix, you get one flat index and not one label for each point |
-| `out` | `None` | an integer array to write the indices into. Its shape must be the shape of the result | a `float64` `out` raises `TypeError`, and a wrong shape raises `ValueError` |
-| `keepdims` | `<no value>` | with `True`, the axis stays with length 1 | — |
+The table under `np.argmin` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.zeros_like`
 
@@ -122,14 +105,7 @@ np.zeros_like(a, dtype=None, order='K', subok=True, shape=None, *, device=None)
 
 The function returns an array of zeros with the shape of `a`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the array whose shape is copied | — |
-| `dtype` | `None` | the type of the result. With `None`, the type of `a` | an integer `a` gives an integer result, which cannot hold a mean |
-| `order` | `'K'` | the memory order of the result. `'K'` keeps the order of `a` | — |
-| `subok` | `True` | with `True`, a subclass of `ndarray`, such as a masked array, gives a result of that subclass | — |
-| `shape` | `None` | a new shape for the result. With `None`, the shape of `a` | — |
-| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
+The table under `np.zeros_like` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.array_equal`
 
@@ -139,10 +115,7 @@ np.array_equal(a1, a2, equal_nan=False)
 
 The function returns `True` if two arrays have the same shape and the same values.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a1`, `a2` | required | the two arrays | arrays of different shape give `False`, with no error |
-| `equal_nan` | `False` | with `True`, two `nan` values count as equal | with `False`, an array that has a `nan` is never equal to itself |
+The table under `np.array_equal` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The comments name the chapter of each line. The line `C[keep] = sums[keep] / counts[keep, None]` has a trap that chapter 5 described. The count has shape `(k,)` and the sums have shape `(k, d)`. Without `None`, the shapes `(k, d)` and `(k,)` do not align, or they align wrongly when `d` equals `k`.
 
@@ -181,12 +154,7 @@ make_blobs(n_per: int, centers: numpy.ndarray, spread: float, seed: int) -> tupl
 
 The function makes `n_per` points around each center, with Gaussian noise. It returns the points and the true label of each point.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `n_per` | required | the number of points for each center | — |
-| `centers` | required | the centers, as a `(k, d)` array | — |
-| `spread` | required | the standard deviation of the noise. The chapter uses 0.8 | with the centers 5 or 6 apart, a spread above about 2 makes the blobs overlap. The book did not measure the limit |
-| `seed` | required | the seed of the noise | the same seed gives the same points |
+The table under `make_blobs` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `kmeans_loop`
 
@@ -196,12 +164,7 @@ kmeans_loop(X: numpy.ndarray, k: int, seed: int = 0, max_iter: int = 100) -> tup
 
 The function is `kmeans` with explicit Python loops. It is the check, and it is not for use on real data.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `X` | required | the points, as an `(n, d)` array | slow: see the timing block, 900 points |
-| `k` | required | the number of clusters | — |
-| `seed` | `0` | the seed of the choice of starting points. The same seed gives the same start as `kmeans` | a different choice of start gives a different result, so compare at the same seed |
-| `max_iter` | `100` | the most iterations | — |
+The table under `kmeans_loop` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The two versions agree on every label, and the largest centroid difference is 0.0 on this input. On other data the two versions can add in a different order and differ at the level of rounding. This is why the check uses `np.allclose` for the centroids and not `==`. If one label differs, a tie that rounding broke the other way is a possible cause. This book did not test such a case. Compare the inertia then.
 
@@ -277,12 +240,7 @@ kmeans_best(X: numpy.ndarray, k: int, n_init: int = 10, seed: int = 0) -> tuple[
 
 The function runs `kmeans` from several starts and keeps the run with the lowest inertia.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `X` | required | the points, as an `(n, d)` array | the cost is `n_init` times the cost of `kmeans` |
-| `k` | required | the number of clusters | — |
-| `n_init` | `10` | the number of starts | with 1, it is `kmeans`, and 24 of 30 seeds succeed. With 10, 30 of 30 succeed |
-| `seed` | `0` | the seed of the starts. The starts come from `SeedSequence.spawn` | — |
+The table under `kmeans_best` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `inertia`
 
@@ -292,11 +250,7 @@ inertia(X: numpy.ndarray, C: numpy.ndarray, labels: numpy.ndarray) -> float
 
 The function returns the sum of squared distances from each point to its centroid.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `X` | required | the points | — |
-| `C` | required | the centroids, as a `(k, d)` array | — |
-| `labels` | required | the index of the centroid of each point | on the chapter data, the good runs have 1176.7 and the failed runs 6215.8 to 6503.7 |
+The table under `inertia` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `purity`
 
@@ -306,11 +260,7 @@ purity(labels: numpy.ndarray, truth: numpy.ndarray, k: int) -> float
 
 The function returns the fraction of points whose cluster has the same majority true label as they do.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `labels` | required | the cluster of each point | — |
-| `truth` | required | the true label of each point, as non-negative integers | needs the true labels, so it cannot be used on real data |
-| `k` | required | the number of clusters | — |
+The table under `purity` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 With 10 starts, all 30 seeds find the blobs. If one start fails with probability 0.2, the chance that all 10 fail is 0.2 to the power 10, which is 1e-7. The 30 results agree with that arithmetic.
 
@@ -477,6 +427,99 @@ This book is short, so it skips topics that have a real use. They are listed her
 | `kmeans_best` | The check that found a real problem | the run with the lowest inertia of several starts |
 | `inertia` | The check that found a real problem | sum of squared distances to the centroids |
 | `purity` | The check that found a real problem | share of points in the majority cluster of their true label |
+
+### Parameters
+
+##### `kmeans`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `X` | required | the points, as an `(n, d)` array | a 1-D array raises an error in the distance step. Use `X.reshape(-1, 1)` for 1-D points |
+| `k` | required | the number of clusters | `k` above `n` raises `ValueError` at the choice of starting points |
+| `seed` | `0` | the seed of the choice of starting points | seed 0 stops at purity 0.67 on the data of this chapter, and 24 of 30 seeds find the blobs |
+| `max_iter` | `100` | the most iterations | at the limit the function returns with labels that may still change, and the third value equals `max_iter` |
+
+##### `np.random.Generator.choice`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | an array, or an integer `n` for the values `0 .. n-1` | — |
+| `size` | `None` | how many to pick | — |
+| `replace` | `True` | with `False`, no element is picked twice | with `True`, two starting centroids can be the same point |
+| `p` | `None` | the probability of each element. With `None`, all are equal | — |
+| `axis` | `0` | the axis of `a` to pick along, when `a` is an array. With `0`, the function picks rows | — |
+| `shuffle` | `True` | with `replace=False`, puts the picked elements in random order. `False` is faster | with `False`, the order of the result is not random: `choice(10, 10, replace=False, shuffle=False)` gave `[0 1 2 ... 9]` |
+
+##### `np.argmin`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array | — |
+| `axis` | `None` | the axis to search along. With `None`, the flattened array | with `None` on an `(n, k)` matrix, you get one flat index and not one label for each point |
+| `out` | `None` | an integer array to write the indices into. Its shape must be the shape of the result | a `float64` `out` raises `TypeError`, and a wrong shape raises `ValueError` |
+| `keepdims` | `<no value>` | with `True`, the axis stays with length 1 | — |
+
+##### `np.zeros_like`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array whose shape is copied | — |
+| `dtype` | `None` | the type of the result. With `None`, the type of `a` | an integer `a` gives an integer result, which cannot hold a mean |
+| `order` | `'K'` | the memory order of the result. `'K'` keeps the order of `a` | — |
+| `subok` | `True` | with `True`, a subclass of `ndarray`, such as a masked array, gives a result of that subclass | — |
+| `shape` | `None` | a new shape for the result. With `None`, the shape of `a` | — |
+| `device` | `None` | the device that holds the result. NumPy accepts only `'cpu'` | any other value raises `ValueError` |
+
+##### `np.array_equal`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a1`, `a2` | required | the two arrays | arrays of different shape give `False`, with no error |
+| `equal_nan` | `False` | with `True`, two `nan` values count as equal | with `False`, an array that has a `nan` is never equal to itself |
+
+##### `make_blobs`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `n_per` | required | the number of points for each center | — |
+| `centers` | required | the centers, as a `(k, d)` array | — |
+| `spread` | required | the standard deviation of the noise. The chapter uses 0.8 | with the centers 5 or 6 apart, a spread above about 2 makes the blobs overlap. The book did not measure the limit |
+| `seed` | required | the seed of the noise | the same seed gives the same points |
+
+##### `kmeans_loop`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `X` | required | the points, as an `(n, d)` array | slow: see the timing block, 900 points |
+| `k` | required | the number of clusters | — |
+| `seed` | `0` | the seed of the choice of starting points. The same seed gives the same start as `kmeans` | a different choice of start gives a different result, so compare at the same seed |
+| `max_iter` | `100` | the most iterations | — |
+
+##### `kmeans_best`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `X` | required | the points, as an `(n, d)` array | the cost is `n_init` times the cost of `kmeans` |
+| `k` | required | the number of clusters | — |
+| `n_init` | `10` | the number of starts | with 1, it is `kmeans`, and 24 of 30 seeds succeed. With 10, 30 of 30 succeed |
+| `seed` | `0` | the seed of the starts. The starts come from `SeedSequence.spawn` | — |
+
+##### `inertia`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `X` | required | the points | — |
+| `C` | required | the centroids, as a `(k, d)` array | — |
+| `labels` | required | the index of the centroid of each point | on the chapter data, the good runs have 1176.7 and the failed runs 6215.8 to 6503.7 |
+
+##### `purity`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `labels` | required | the cluster of each point | — |
+| `truth` | required | the true label of each point, as non-negative integers | needs the true labels, so it cannot be used on real data |
+| `k` | required | the number of clusters | — |
+
 
 ## What you have now
 

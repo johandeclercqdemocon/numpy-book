@@ -98,9 +98,7 @@ root(a: numpy.ndarray) -> numpy.ndarray
 
 The function returns the array that owns the memory of `a`. If `a` owns its memory, it returns `a`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | any `ndarray`, a view or an owner | an array built on `bytes` has a base that is not an array, so `root` returns that array and not the `bytes` object |
+The table under `root` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The check `isinstance(a.base, np.ndarray)` is needed. An array can be built on top of bytes, a memory-mapped file, or a buffer from another library. In those cases `.base` is not an array, and the loop must stop.
 
@@ -130,10 +128,7 @@ np.may_share_memory(a, b, /, max_work=0)
 
 The function is the quick version of `np.shares_memory`. It tests only whether the memory ranges of the two arrays overlap.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a`, `b` | required | the two arrays to compare | — |
-| `max_work` | `0` | the effort. `0` compares only the first and last byte of each array | the interleaved slices `a[::2]` and `a[1::2]` give `True`, and `np.shares_memory` gives `False` |
+The table under `np.may_share_memory` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The quick function can say yes when the exact answer is no. The next block tests the other direction on 5000 random pairs of slices: does the quick function ever say no when the exact answer is yes?
 
@@ -282,11 +277,7 @@ np.ascontiguousarray(a, dtype=None, *, like=None)
 
 The function returns an array in C order. It copies only when the input is not already C-contiguous.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | any array or array-like | for an input that is already contiguous, the result is the input itself, and a write reaches the original |
-| `dtype` | `None` | the type of the result. With `None`, the dtype of the input | — |
-| `like` | `None` | an array of another array library. The result is then an array of that library | a list raises `TypeError` |
+The table under `np.ascontiguousarray` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The rule that follows has two parts. Use the built-in reduction when one exists. When you must loop in Python, loop over the first axis, so that each step reads one consecutive row.
 
@@ -302,11 +293,7 @@ np.ndarray.reshape(self, /, *shape, order='C', copy=None)
 
 The method returns an array with the same values and a new shape. It returns a view when the strides allow it.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `*shape` | — | the new shape, as a tuple or as separate integers. One length can be `-1`, and NumPy computes it | the product of the new lengths must equal the size, or the call raises `ValueError` |
-| `order` | `'C'` | the order in which values are read and placed. `'C'` means that the last axis changes fastest | `'F'` on a C array reorders the values, and it can force a copy |
-| `copy` | `None` | `None` gives a view when possible and a copy when not. `True` always copies. `False` raises `ValueError` if a copy cannot be avoided | with `None` you do not know if a later write reaches the original. With `False` the transposed case raises `Unable to avoid creating a copy while reshaping.` |
+The table under `np.ndarray.reshape` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `np.ndarray.copy`
 
@@ -316,9 +303,7 @@ np.ndarray.copy(self, /, order='C')
 
 The method returns a new array with its own block.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `order` | `'C'` | the memory order of the copy. `'F'` is Fortran order. `'A'` is the order of the input. `'K'` is as close to the input as possible | the function `np.copy` has the default `'K'`, so `a.T.copy()` has strides `(24, 8)` and `np.copy(a.T)` has strides `(8, 32)` for the array in the next block |
+The table under `np.ndarray.copy` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The code below tests each line of the summary table that follows. It raises an error if one line is wrong.
 
@@ -463,6 +448,44 @@ You can protect your own arrays in the same way with `setflags(write=False)`. A 
 | `np.ascontiguousarray` | What a copy costs, and what a bad walk costs | C-ordered array, copied only when needed |
 | `np.ndarray.reshape` | Which operations copy | new shape, a view when the strides allow |
 | `np.ndarray.copy` | Which operations copy | a new block, in a given memory order |
+
+### Parameters
+
+##### `root`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | any `ndarray`, a view or an owner | an array built on `bytes` has a base that is not an array, so `root` returns that array and not the `bytes` object |
+
+##### `np.may_share_memory`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a`, `b` | required | the two arrays to compare | — |
+| `max_work` | `0` | the effort. `0` compares only the first and last byte of each array | the interleaved slices `a[::2]` and `a[1::2]` give `True`, and `np.shares_memory` gives `False` |
+
+##### `np.ascontiguousarray`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | any array or array-like | for an input that is already contiguous, the result is the input itself, and a write reaches the original |
+| `dtype` | `None` | the type of the result. With `None`, the dtype of the input | — |
+| `like` | `None` | an array of another array library. The result is then an array of that library | a list raises `TypeError` |
+
+##### `np.ndarray.reshape`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `*shape` | — | the new shape, as a tuple or as separate integers. One length can be `-1`, and NumPy computes it | the product of the new lengths must equal the size, or the call raises `ValueError` |
+| `order` | `'C'` | the order in which values are read and placed. `'C'` means that the last axis changes fastest | `'F'` on a C array reorders the values, and it can force a copy |
+| `copy` | `None` | `None` gives a view when possible and a copy when not. `True` always copies. `False` raises `ValueError` if a copy cannot be avoided | with `None` you do not know if a later write reaches the original. With `False` the transposed case raises `Unable to avoid creating a copy while reshaping.` |
+
+##### `np.ndarray.copy`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `order` | `'C'` | the memory order of the copy. `'F'` is Fortran order. `'A'` is the order of the input. `'K'` is as close to the input as possible | the function `np.copy` has the default `'K'`, so `a.T.copy()` has strides `(24, 8)` and `np.copy(a.T)` has strides `(8, 32)` for the array in the next block |
+
 
 ## What you have now
 

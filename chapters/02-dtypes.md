@@ -74,13 +74,7 @@ np.ndarray.astype(self, /, dtype, order='K', casting='unsafe', subok=True, copy=
 
 The method returns a copy of the array with another dtype. It is the tool that changed 300 into 44 above.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `dtype` | required | the new type | a narrower integer type wraps the values: 300 becomes 44 |
-| `order` | `'K'` | the memory order of the result. `'K'` keeps the order of the input | — |
-| `casting` | `'unsafe'` | which casts are allowed. `'safe'` allows only casts that cannot lose a value | with `'unsafe'` nothing stops 300 from becoming 44. With `'safe'` the call raises `TypeError` |
-| `subok` | `True` | with `True`, a subclass of `ndarray`, such as a masked array, stays that subclass. With `False`, the result is a plain `ndarray` | with `False`, a masked array loses its mask |
-| `copy` | `True` | with `False`, the method returns the same array when the dtype already matches | with `True` the call always makes a new block |
+The table under `np.ndarray.astype` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The `casting` parameter is the guard. The call `np.array([300]).astype(np.uint8, casting='safe')` raises `TypeError: Cannot cast array data from dtype('int64') to dtype('uint8') according to the rule 'safe'`.
 
@@ -149,9 +143,7 @@ np.iinfo(int_type)
 
 The class returns the limits of an integer type. The object has the attributes `min`, `max` and `bits`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `int_type` | required | an integer dtype, a dtype name or an integer array | a float dtype raises `ValueError`. Use `np.finfo` for floats |
+The table under `np.iinfo` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 #### `checked_add`
 
@@ -161,10 +153,7 @@ checked_add(a: numpy.ndarray, b: numpy.ndarray) -> numpy.ndarray
 
 The function adds two integer arrays and raises `OverflowError` for the first result that does not fit the dtype of `a`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | an integer array. Its dtype is the dtype of the result | a `uint64` array raises `TypeError`, because no wider type exists to check against |
-| `b` | required | an integer array that broadcasts against `a` | a float array raises `TypeError` |
+The table under `checked_add` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The function has two limits, and the code says both. It cannot check `uint64`, because no wider integer type exists in NumPy. It takes `a.dtype` as the output type, so a `uint8` plus an `int16` is checked against `uint8`. For a clip instead of an error, use `np.clip(wide, info.min, info.max)`.
 
@@ -197,15 +186,7 @@ np.sum(a, axis=None, dtype=None, out=None, keepdims=<no value>, initial=<no valu
 
 The function adds the values of an array along an axis. The method `a.sum(...)` takes the same arguments after `self`.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the array to add | — |
-| `axis` | `None` | the axis to add along. `None` adds all values. A tuple adds along several axes | — |
-| `dtype` | `None` | the type of the running total. With `None`, an integer input smaller than the platform integer uses `int64` | `dtype=np.int8` on the values above gives 91 and not 347, with no warning |
-| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | a wrong shape raises `ValueError` |
-| `keepdims` | `<no value>` | with `True`, the reduced axes stay with length 1 | the shape of the result changes, and broadcasting differs |
-| `initial` | `<no value>` | a start value for the sum. With `<no value>`, the start is 0 | it is added once to each value of the result: on `[[1, 2], [3, 4]]` with `axis=1`, `initial=10` gives `[13 17]` |
-| `where` | `<no value>` | a boolean array. Only the values where it is `True` are added. With `<no value>`, all values | if no value is `True`, the result is 0 and there is no warning |
+The table under `np.sum` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 This default is a protection and also a trap. The sum of a `uint8` image is safe. The sum of a `float32` array stays `float32`, and the next section shows that this is not safe.
 
@@ -241,9 +222,7 @@ np.finfo(dtype)
 
 The class returns the limits of a float type. The attributes `eps`, `max`, `tiny` and `bits` describe it.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `dtype` | required | a float dtype, a dtype name or a float array | an integer dtype raises `ValueError`. Use `np.iinfo` for integers |
+The table under `np.finfo` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 Now the practical case. Add ten million copies of 0.1 in `float32`. The exact answer is 1,000,000.015, because `float32(0.1)` is a little more than 0.1. Compare three ways to add.
 
@@ -282,12 +261,7 @@ np.cumsum(a, axis=None, dtype=None, out=None)
 
 The function returns the running total of an array. Every partial sum is in the result.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `a` | required | the array to add | — |
-| `axis` | `None` | the axis to add along. With `None`, the array is flattened first | a 2-D input becomes a 1-D result |
-| `dtype` | `None` | the type of the running total and of the result | for ten million `float32` values of 0.1, the default is wrong by 8.8 percent, and `np.float64` gives 0.0 percent |
-| `out` | `None` | an array to write the result into. It must have the size of the result | a wrong size raises `ValueError` |
+The table under `np.cumsum` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 ## Mixed dtypes: which one wins
 
@@ -323,11 +297,7 @@ np.can_cast(from_, to, casting='safe')
 
 The function tells you whether a cast from one dtype to another is allowed under a rule.
 
-| parameter | default | what it does | what goes wrong |
-|---|---|---|---|
-| `from_` | required | the source dtype, or an array | — |
-| `to` | required | the target dtype | — |
-| `casting` | `'safe'` | the rule: `'no'`, `'equiv'`, `'safe'`, `'same_kind'` or `'unsafe'` | `'safe'` allows `int64` to `float64`, which can lose the last digits |
+The table under `np.can_cast` in the Reference section of this chapter gives each parameter and what goes wrong with it.
 
 The last row is worth a test. The call `np.can_cast(np.int64, np.float64)` returns `True`. A `float64` has 53 bits of precision, and an `int64` has 63. The next block shows the loss.
 
@@ -456,6 +426,67 @@ The total passes 2¹⁹ at step 5.5 million. Both sizes above 2¹⁹ in the tabl
 | `np.finfo` | Floats lose small additions | the limits and precision of a float type |
 | `np.cumsum` | Floats lose small additions | running total, in a type that you can set |
 | `np.can_cast` | Mixed dtypes: which one wins | whether a cast is allowed under a rule |
+
+### Parameters
+
+##### `np.ndarray.astype`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `dtype` | required | the new type | a narrower integer type wraps the values: 300 becomes 44 |
+| `order` | `'K'` | the memory order of the result. `'K'` keeps the order of the input | — |
+| `casting` | `'unsafe'` | which casts are allowed. `'safe'` allows only casts that cannot lose a value | with `'unsafe'` nothing stops 300 from becoming 44. With `'safe'` the call raises `TypeError` |
+| `subok` | `True` | with `True`, a subclass of `ndarray`, such as a masked array, stays that subclass. With `False`, the result is a plain `ndarray` | with `False`, a masked array loses its mask |
+| `copy` | `True` | with `False`, the method returns the same array when the dtype already matches | with `True` the call always makes a new block |
+
+##### `np.iinfo`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `int_type` | required | an integer dtype, a dtype name or an integer array | a float dtype raises `ValueError`. Use `np.finfo` for floats |
+
+##### `checked_add`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | an integer array. Its dtype is the dtype of the result | a `uint64` array raises `TypeError`, because no wider type exists to check against |
+| `b` | required | an integer array that broadcasts against `a` | a float array raises `TypeError` |
+
+##### `np.sum`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array to add | — |
+| `axis` | `None` | the axis to add along. `None` adds all values. A tuple adds along several axes | — |
+| `dtype` | `None` | the type of the running total. With `None`, an integer input smaller than the platform integer uses `int64` | `dtype=np.int8` on the values above gives 91 and not 347, with no warning |
+| `out` | `None` | an array to write the result into. Its shape must be the shape of the result | a wrong shape raises `ValueError` |
+| `keepdims` | `<no value>` | with `True`, the reduced axes stay with length 1 | the shape of the result changes, and broadcasting differs |
+| `initial` | `<no value>` | a start value for the sum. With `<no value>`, the start is 0 | it is added once to each value of the result: on `[[1, 2], [3, 4]]` with `axis=1`, `initial=10` gives `[13 17]` |
+| `where` | `<no value>` | a boolean array. Only the values where it is `True` are added. With `<no value>`, all values | if no value is `True`, the result is 0 and there is no warning |
+
+##### `np.finfo`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `dtype` | required | a float dtype, a dtype name or a float array | an integer dtype raises `ValueError`. Use `np.iinfo` for integers |
+
+##### `np.cumsum`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `a` | required | the array to add | — |
+| `axis` | `None` | the axis to add along. With `None`, the array is flattened first | a 2-D input becomes a 1-D result |
+| `dtype` | `None` | the type of the running total and of the result | for ten million `float32` values of 0.1, the default is wrong by 8.8 percent, and `np.float64` gives 0.0 percent |
+| `out` | `None` | an array to write the result into. It must have the size of the result | a wrong size raises `ValueError` |
+
+##### `np.can_cast`
+
+| parameter | default | what it does | what goes wrong |
+|---|---|---|---|
+| `from_` | required | the source dtype, or an array | — |
+| `to` | required | the target dtype | — |
+| `casting` | `'safe'` | the rule: `'no'`, `'equiv'`, `'safe'`, `'same_kind'` or `'unsafe'` | `'safe'` allows `int64` to `float64`, which can lose the last digits |
+
 
 ## What you have now
 
