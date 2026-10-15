@@ -237,6 +237,8 @@ def check_parameters():
             seen = []
             if name not in tables:
                 fail(f"{where}: no `##### {name}` table in the Reference section")
+            if ROW.search(body):
+                fail(f"{where}: a parameter table inside the block; it belongs under `##### {name}` in Reference")
             for r in ROW.finditer(tables.get(name, "")):
                 default = r.group(2)
                 for pname in [n.strip("` ") for n in r.group(1).split(", ")]:
