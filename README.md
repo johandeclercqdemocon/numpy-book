@@ -8,7 +8,7 @@ Every function has its signature at the place where the chapter first uses it. A
 
 **Nothing in it is asserted that was not run.** Every number in the text comes from code that ships with the book. A checker executes every code block and compares every printed output with the text. The checker compares each signature with the signature of the installed NumPy.
 
-It also compares each default in a parameter table with the real default. It fails when a parameter of the signature has no row in the table. The book depends only on NumPy, and the whole book verifies offline and costs nothing: no network, no model, no API.
+It also compares each default in a parameter table with the real default. It fails when a parameter of the signature has no row in the table. The book depends only on NumPy, and the whole book verifies offline and costs nothing: no network, no model, no API. The full check also passed on a second machine (Intel i7-8750H, Debian 13), with every timing assertion.
 
 The text is in Simplified Technical English. NumPy 2.5.4 on Python 3.13 produced every output in the book.
 
